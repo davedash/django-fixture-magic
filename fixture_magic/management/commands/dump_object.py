@@ -47,7 +47,11 @@ class Command(BaseCommand):
     def handle(self, object_class, *ids, **options):
         (app_label, model_name) = object_class.split('.')
         dump_me = loading.get_model(app_label, model_name)
-        objs = dump_me.objects.filter(pk__in=[int(i) for i in ids])
+        try:
+            objs = dump_me.objects.filter(pk__in=[int(i) for i in ids])
+        except ValueError:
+            # We might have primary keys thar are just strings...
+            objs = dump_me.objects.filter(pk__in=ids)
 
         if options.get('kitchensink'):
             related_fields = [rel.get_accessor_name() for rel in
