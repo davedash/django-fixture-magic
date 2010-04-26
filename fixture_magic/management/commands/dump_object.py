@@ -1,6 +1,6 @@
 from optparse import make_option
 
-from django.core.exceptions import FieldError
+from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.core.management.base import BaseCommand
 from django.db.models import loading
 from django.core.serializers import serialize
@@ -62,6 +62,8 @@ class Command(BaseCommand):
                     try:
                         add_to_serialize_list(obj.__getattribute__(rel).all())
                     except FieldError:
+                        pass
+                    except ObjectDoesNotExist:
                         pass
 
         add_to_serialize_list(objs)
