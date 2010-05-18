@@ -4,33 +4,9 @@ from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.core.management.base import BaseCommand
 from django.db.models import loading
 from django.core.serializers import serialize
-from django.db import models
 
-
-def get_fields(obj):
-    try:
-        return obj._meta.fields
-    except AttributeError:
-        return []
-
-
-serialize_me = []
-seen = {}
-
-def add_to_serialize_list(objs):
-    for obj in objs:
-        if obj is None:
-            continue
-
-        # Proxy models don't serialize well in Django.
-        if obj._meta.proxy:
-            obj = obj._meta.proxy_for_model.objects.get(pk=obj.pk)
-
-        key = "%s:%s:%s" % (obj._meta.app_label, obj._meta.module_name,
-                            obj.pk)
-        if key not in seen:
-            serialize_me.append(obj)
-            seen[key] = 1
+from fixture_magic.utils import (get_fields, add_to_serialize_list,
+                                 serialize_me, seen, serialize_fully)
 
 
 class Command(BaseCommand):
@@ -67,16 +43,6 @@ class Command(BaseCommand):
                         pass
 
         add_to_serialize_list(objs)
-        index = 0
-
-        while index < len(serialize_me):
-            for field in get_fields(serialize_me[index]):
-                if isinstance(field, models.ForeignKey):
-                    add_to_serialize_list(
-                        [serialize_me[index].__getattribute__(field.name)])
-
-            index = index + 1
-
-        serialize_me.reverse()
+        serialize_fully()
         print serialize('json', [o for o in serialize_me if o is not None],
                         indent=4)

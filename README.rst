@@ -31,7 +31,7 @@ your ``INSTALLED_APPS`` in ``settings.py``: ::
 Usage
 -----
 
-There are three commands.  ``dump_object`` returns the json representation of
+There are four commands.  ``dump_object`` returns the json representation of
 a specific object as well as all its dependencies (as defined by ForeignKeys).
 
     ./manage.py dump_object APP.MODEL PK1 PK2 PK3 ... > my_new_fixture.json
@@ -57,3 +57,23 @@ errors when loading models.
     > ordered_fixture.json
 
 Unspecified models will be appended to the end.
+
+The fourth command is ``custom_dump``.  This reads a setting ``CUSTOM_DUMPS``:
+
+
+    ## Fixture Magic
+    CUSTOM_DUMPS = {
+        'addon': {  # ./manage.py custom_dump addon id
+            'primary': 'addons.addon',  # This is our reference model.
+            'dependents': [  # These are items we wish to dump.
+                'current_version',
+                # Magic turns this into current_version.files.all()[0].
+                'current_version.files.all.0',
+            ],
+            'order': ('app1.model1', 'app2.model2',)  # stuff gets sorted
+        }
+    }
+
+It runs the equivalent of ``dump_object`` on the dependents (which in turn pick
+up the primary object).  The JSON dumps are then merged together.  Very handy
+for dumping multi-dependent objects.
