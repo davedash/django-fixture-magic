@@ -1,4 +1,8 @@
-import json
+try:
+    import json
+except ImportError:
+    from django.utils import simplejson as json
+
 from optparse import make_option
 
 from django.core.exceptions import FieldError, ObjectDoesNotExist
