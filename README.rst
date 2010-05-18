@@ -60,6 +60,7 @@ Unspecified models will be appended to the end.
 
 The fourth command is ``custom_dump``.  This reads a setting ``CUSTOM_DUMPS``:
 
+::
 
     ## Fixture Magic
     CUSTOM_DUMPS = {
