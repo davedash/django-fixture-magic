@@ -1,3 +1,4 @@
+import sys
 try:
     import json
 except ImportError:
@@ -11,7 +12,7 @@ from django.db.models import loading
 from django.core.serializers import serialize
 from django.db import models
 from django.conf import settings
-from django.template import Variable
+from django.template import Variable, VariableDoesNotExist
 
 from fixture_magic.utils import (get_fields, add_to_serialize_list,
                                  reorder_json, serialize_me, seen,
@@ -28,11 +29,16 @@ class Command(BaseCommand):
         (app_label, model_name) = dump_settings['primary'].split('.')
         dump_me = loading.get_model(app_label, model_name)
         obj = dump_me.objects.get(pk=pk)
-
         # get the dependent objects and add to serialize list
         for dep in dump_settings['dependents']:
-            thing = Variable("thing.%s" % dep).resolve({'thing': obj})
-            add_to_serialize_list([thing])
+            try:
+                thing = Variable("thing.%s" % dep).resolve({'thing': obj})
+                add_to_serialize_list([thing])
+            except VariableDoesNotExist:
+                sys.stderr.write('%s not found' % dep)
+
+        if not dump_settings['dependents']:
+            add_to_serialize_list([obj])
 
         serialize_fully()
         data = serialize('json', [o for o in serialize_me if o is not None])
