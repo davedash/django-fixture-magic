@@ -51,6 +51,9 @@ def add_to_serialize_list(objs):
     for obj in objs:
         if obj is None:
             continue
+        if not hasattr(obj, '_meta'):
+            add_to_serialize_list(obj)
+            continue
 
         # Proxy models don't serialize well in Django.
         if obj._meta.proxy:
