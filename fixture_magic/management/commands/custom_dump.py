@@ -38,6 +38,7 @@ class Command(BaseCommand):
         serialize_fully()
         data = serialize('json', [o for o in serialize_me if o is not None])
 
-        data = reorder_json(json.loads(data), dump_settings.get('order', []))
+        data = reorder_json(json.loads(data), dump_settings.get('order', []),
+                ordering_cond=dump_settings.get('order_cond',{}))
 
         print json.dumps(data, indent=4)
