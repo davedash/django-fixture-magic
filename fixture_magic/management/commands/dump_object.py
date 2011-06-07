@@ -5,8 +5,8 @@ from django.core.management.base import BaseCommand
 from django.db.models import loading
 from django.core.serializers import serialize
 
-from fixture_magic.utils import (get_fields, add_to_serialize_list,
-                                 serialize_me, seen, serialize_fully)
+from fixture_magic.utils import (add_to_serialize_list, serialize_me,
+        serialize_fully)
 
 
 class Command(BaseCommand):
