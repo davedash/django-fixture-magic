@@ -4,19 +4,14 @@ try:
 except ImportError:
     from django.utils import simplejson as json
 
-from optparse import make_option
-
-from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.core.management.base import BaseCommand
 from django.db.models import loading
 from django.core.serializers import serialize
-from django.db import models
 from django.conf import settings
 from django.template import Variable, VariableDoesNotExist
 
-from fixture_magic.utils import (get_fields, add_to_serialize_list,
-                                 reorder_json, serialize_me, seen,
-                                 serialize_fully)
+from fixture_magic.utils import (add_to_serialize_list, reorder_json,
+        serialize_me, serialize_fully)
 
 
 class Command(BaseCommand):
@@ -43,6 +38,7 @@ class Command(BaseCommand):
         serialize_fully()
         data = serialize('json', [o for o in serialize_me if o is not None])
 
-        data = reorder_json(json.loads(data), dump_settings.get('order', []))
+        data = reorder_json(json.loads(data), dump_settings.get('order', []),
+                ordering_cond=dump_settings.get('order_cond',{}))
 
         print json.dumps(data, indent=4)

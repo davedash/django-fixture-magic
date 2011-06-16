@@ -1,11 +1,9 @@
-import json
-
 from django.db import models
 
 serialize_me = []
 seen = {}
 
-def reorder_json(data, models):
+def reorder_json(data, models, ordering_cond={}):
     output = []
     bucket = {}
     others = []
@@ -18,8 +16,9 @@ def reorder_json(data, models):
             bucket[object['model']].append(object)
         else:
             others.append(object)
-
     for model in models:
+        if ordering_cond.has_key(model):
+            bucket[model].sort(key=ordering_cond[model])
         output.extend(bucket[model])
 
     output.extend(others)
@@ -50,6 +49,9 @@ def serialize_fully():
 def add_to_serialize_list(objs):
     for obj in objs:
         if obj is None:
+            continue
+        if not hasattr(obj, '_meta'):
+            add_to_serialize_list(obj)
             continue
 
         # Proxy models don't serialize well in Django.
