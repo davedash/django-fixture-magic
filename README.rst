@@ -64,17 +64,36 @@ The fourth command is ``custom_dump``.  This reads a setting ``CUSTOM_DUMPS``:
 
     ## Fixture Magic
     CUSTOM_DUMPS = {
-        'addon': {  # ./manage.py custom_dump addon id
+        'addon': {  # Initiate dump with: ./manage.py custom_dump addon id
             'primary': 'addons.addon',  # This is our reference model.
-            'dependents': [  # These are items we wish to dump.
+            'dependents': [  # These are the attributes/methods of the model that we wish to dump.
                 'current_version',
-                # Magic turns this into current_version.files.all()[0].
                 'current_version.files.all.0',
             ],
-            'order': ('app1.model1', 'app2.model2',)  # stuff gets sorted
+            'order': ('app1.model1', 'app2.model2',),
+            'order_cond': {'app1.model1': lambda x: 1 if x.get('fields').get('parent_model1') else 0,
+                            'app2.model2': lambda x: -1 * x.get('pk')},
         }
     }
 
 It runs the equivalent of ``dump_object`` on the dependents (which in turn pick
 up the primary object).  The JSON dumps are then merged together.  Very handy
-for dumping multi-dependent objects.
+for dumping multi-dependent objects. `dependents`, `order` and `order_cond` are
+optional.
+
+`dependents`: Defines additional properties/methods to dump the return values
+of. Magic will convert `"current_version.files.all.0"`
+to `object.current_version.files.all()[0]`
+
+`order`: Specify an order in which objects should be dumped based on their
+model class. In the above example, all app1.model1 objects will preceed any
+app2.model2 objects, which will preceed any objects of any other model class.
+
+`order_cond`: Specify an order to dump objects of one or more particular model
+classes. In the above example, all app1.model1 objects with a truthy
+`self.parent_model1` attribute will come after any other app1.model1 object that
+does not have a truthy value for this attribute. A sort operation is called on
+the list of all objects of that model type, with the value associated with a
+model name being passed to the sort function as the `key` keyword argument.
+Keep in mind that the model objects will have already been serialized to a
+dictionary object prior to the sort operation.
