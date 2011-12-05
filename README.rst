@@ -17,7 +17,7 @@ You can get fixture-magic from pypi with: ::
 
 The development version can be installed with: ::
 
-    pip install -e git://github.com/davedash/django-fixture-magic#egg=django_fixture_magic
+    pip install -e git://github.com/davedash/django-fixture-magic#egg=fixture-magic
 
 fixture-magic adds two commands to ``manage.py`` therefore you should add it to
 your ``INSTALLED_APPS`` in ``settings.py``: ::
