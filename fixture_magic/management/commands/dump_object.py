@@ -12,30 +12,37 @@ from fixture_magic.utils import (add_to_serialize_list, serialize_me,
 class Command(BaseCommand):
     help = ('Dump specific objects from the database into JSON that you can '
             'use in a fixture')
-    args = "<[--kitchensink | -k] object_class id1 [id2 [...]]>"
+    args = "<[--kitchensink | -k] [--file | -f] object_class id1 [id2 [...]]>"
 
     option_list = BaseCommand.option_list + (
             make_option('--kitchensink', '-k',
                 action='store_true', dest='kitchensink',
                 default=False,
                 help='Attempts to get related objects as well.'),
+            make_option('--file', '-f',
+                action='store', dest='file',
+                default=None,
+                help='id list file with one id per line'),
             )
 
     def handle(self, *args, **options):
-        error_text = ('%s\nTry caling dump_object with --help argument or use'+
+        error_text = ('%s\nTry caling dump_object with --help argument or use' +
                 ' the following arguments:\n %s' %self.args)
         try:
             #verify input is valid
             (app_label, model_name) = args[0].split('.')
-            ids = args[1:]
+            if options.get('file'):
+                ids = [int(line.strip()) for line in file(options.get('file'))]
+            else:
+                ids = args[1:]
             assert(ids)
         except IndexError:
-            raise CommandError(error_text %'No object_class or id arguments supplied.')
+            raise CommandError(error_text % 'No object_class or id arguments supplied.')
         except ValueError:
-            raise CommandError(error_text %("object_class must be provided in"+
+            raise CommandError(error_text % ("object_class must be provided in"+
                     " the following format: app_name.model_name"))
         except AssertionError:
-            raise CommandError(error_text %'No id arguments supplied.')
+            raise CommandError(error_text % 'No id arguments supplied.')
 
         dump_me = loading.get_model(app_label, model_name)
         try:
