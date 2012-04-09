@@ -41,8 +41,12 @@ class Command(BaseCommand):
         try:
             objs = dump_me.objects.filter(pk__in=[int(i) for i in ids])
         except ValueError:
-            # We might have primary keys thar are just strings...
-            objs = dump_me.objects.filter(pk__in=ids)
+            # We might have primary keys that are longs...
+            try:
+                objs = dump_me.objects.filter(pk__in=[long(i) for i in ids]) 
+            except ValueError:
+                # Finally, we might have primary keys that are strings...
+                objs = dump_me.objects.filter(pk__in=ids)
 
         if options.get('kitchensink'):
             related_fields = [rel.get_accessor_name() for rel in
