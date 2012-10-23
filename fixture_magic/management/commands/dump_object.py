@@ -39,7 +39,10 @@ class Command(BaseCommand):
 
         dump_me = loading.get_model(app_label, model_name)
         try:
-            objs = dump_me.objects.filter(pk__in=[int(i) for i in ids])
+            if ids[0] == '*':
+                objs = dump_me.objects.all()
+            else:
+                objs = dump_me.objects.filter(pk__in=[int(i) for i in ids])
         except ValueError:
             # We might have primary keys thar are just strings...
             objs = dump_me.objects.filter(pk__in=ids)
