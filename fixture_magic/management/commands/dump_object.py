@@ -39,7 +39,7 @@ class Command(BaseCommand):
 
         dump_me = loading.get_model(app_label, model_name)
         try:
-            if ids[0] == '*':
+            if ids[0] == 'all':
                 objs = dump_me.objects.all()
             else:
                 objs = dump_me.objects.filter(pk__in=[int(i) for i in ids])

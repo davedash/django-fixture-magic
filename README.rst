@@ -38,7 +38,7 @@ a specific object as well as all its dependencies (as defined by ForeignKeys).
 
 Or you can get all objects with all dependencies:
 
-    ./manage.py dump_object APP.MODEL * > my_new_fixture.json
+    ./manage.py dump_object APP.MODEL all > my_new_fixture.json
 
 You can now safely load ``my_new_fixture.json`` in a test without foreign key i
 errors.
