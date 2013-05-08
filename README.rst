@@ -36,9 +36,9 @@ a specific object as well as all its dependencies (as defined by ForeignKeys).
 
     ./manage.py dump_object APP.MODEL PK1 PK2 PK3 ... > my_new_fixture.json
 
-Or you can get all objects with all dependencies:
+Or you can get all objects with all dependencies by passing an asterisk (in quotes because to the shell an asterisk means to select all files in the current directory):
 
-    ./manage.py dump_object APP.MODEL * > my_new_fixture.json
+    ./manage.py dump_object APP.MODEL '*' > my_new_fixture.json
 
 You can now safely load ``my_new_fixture.json`` in a test without foreign key i
 errors.
