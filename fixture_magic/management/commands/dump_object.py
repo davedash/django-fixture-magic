@@ -62,5 +62,5 @@ class Command(BaseCommand):
 
         add_to_serialize_list(objs)
         serialize_fully()
-        print serialize('json', [o for o in serialize_me if o is not None],
-                        indent=4)
+        self.stdout.write(serialize('json', [o for o in serialize_me if o is not None],
+                indent=4))
