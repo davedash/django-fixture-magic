@@ -22,8 +22,8 @@ class Command(BaseCommand):
             )
 
     def handle(self, *args, **options):
-        error_text = ('%s\nTry caling dump_object with --help argument or use'+
-                ' the following arguments:\n %s' %self.args)
+        error_text = ('%s\nTry calling dump_object with --help argument or ' +
+                      'use the following arguments:\n %s' %self.args)
         try:
             #verify input is valid
             (app_label, model_name) = args[0].split('.')
