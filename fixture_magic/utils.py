@@ -3,7 +3,18 @@ from django.db import models
 serialize_me = []
 seen = {}
 
+
 def reorder_json(data, models, ordering_cond={}):
+    """Reorders JSON (actually a list of model dicts).
+
+    This is useful if you need fixtures for one model to be loaded before
+    another.
+
+    :param data: the input JSON to sort
+    :param models: the desired order for each model type
+    :param ordering_cond: a key to sort within a model
+    :return: the ordered JSON
+    """
     output = []
     bucket = {}
     others = []
@@ -41,7 +52,7 @@ def serialize_fully():
                 add_to_serialize_list(
                     [serialize_me[index].__getattribute__(field.name)])
 
-        index = index + 1
+        index += 1
 
     serialize_me.reverse()
 

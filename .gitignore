@@ -4,3 +4,8 @@ dist/
 build/
 *.pyc
 *.swp
+.project
+.coverage
+.tox
+coverage.xml
+junit-py27.xml
