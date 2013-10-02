@@ -1,3 +1,7 @@
+.. image:: https://travis-ci.org/davedash/django-fixture-magic.png
+
+
+
 ============
 Requirements
 ============
