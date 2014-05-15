@@ -57,17 +57,17 @@ def serialize_fully():
     serialize_me.reverse()
 
 
-def add_to_serialize_list(objs):
+def add_to_serialize_list(objs, using):
     for obj in objs:
         if obj is None:
             continue
         if not hasattr(obj, '_meta'):
-            add_to_serialize_list(obj)
+            add_to_serialize_list(obj, using)
             continue
 
         # Proxy models don't serialize well in Django.
         if obj._meta.proxy:
-            obj = obj._meta.proxy_for_model.objects.get(pk=obj.pk)
+            obj = obj._meta.proxy_for_model.objects.using(using).get(pk=obj.pk)
 
         key = "%s:%s:%s" % (obj._meta.app_label, obj._meta.module_name,
                             obj.pk)

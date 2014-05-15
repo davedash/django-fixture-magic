@@ -17,23 +17,30 @@ class Command(BaseCommand):
     help = 'Dump multiple pre-defined sets of objects into a JSON fixture.'
     args = "[dump_name pk [pk2 pk3 [..]]"
 
+    option_list = BaseCommand.option_list + (
+            make_option('--database', action='store', dest='database',
+                default=DEFAULT_DB_ALIAS, help='Nominates a specific database to dump '
+                'fixtures from. Defaults to the "default" database.'),
+            )
+
     def handle(self, dump_name, *pks, **options):
+        using = options.get('database')
         # Get the primary object
         dump_settings = settings.CUSTOM_DUMPS[dump_name]
         (app_label, model_name) = dump_settings['primary'].split('.')
         dump_me = loading.get_model(app_label, model_name)
-        objs = dump_me.objects.filter(pk__in=[int(i) for i in pks])
+        objs = dump_me.objects.using(using).filter(pk__in=[int(i) for i in pks])
         for obj in objs:
             # get the dependent objects and add to serialize list
             for dep in dump_settings['dependents']:
                 try:
                     thing = Variable("thing.%s" % dep).resolve({'thing': obj})
-                    add_to_serialize_list([thing])
+                    add_to_serialize_list([thing], using)
                 except VariableDoesNotExist:
                     sys.stderr.write('%s not found' % dep)
 
             if not dump_settings['dependents']:
-                add_to_serialize_list([obj])
+                add_to_serialize_list([obj], using)
 
         serialize_fully()
         data = serialize('json', [o for o in serialize_me if o is not None])
