@@ -19,6 +19,10 @@ class Command(BaseCommand):
                 action='store_true', dest='kitchensink',
                 default=False,
                 help='Attempts to get related objects as well.'),
+            make_option('--natural', '-n',
+                action='store_true', dest='natural',
+                default=False,
+                help='Use natural keys if they are available.')                
             )
 
     def handle(self, *args, **options):
@@ -67,4 +71,4 @@ class Command(BaseCommand):
         add_to_serialize_list(objs)
         serialize_fully()
         self.stdout.write(serialize('json', [o for o in serialize_me if o is not None],
-                indent=4))
+                indent=4, use_natural_keys=options.get('natural', False))
