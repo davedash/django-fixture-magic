@@ -4,6 +4,7 @@ from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
 from django.core.serializers import serialize
 from django.db.models import loading
+import json
 
 from fixture_magic.utils import (add_to_serialize_list, serialize_me,
         serialize_fully)
@@ -12,7 +13,7 @@ from fixture_magic.utils import (add_to_serialize_list, serialize_me,
 class Command(BaseCommand):
     help = ('Dump specific objects from the database into JSON that you can '
             'use in a fixture')
-    args = "<[--kitchensink | -k] object_class id1 [id2 [...]]>"
+    args = "<[--kitchensink | -k] object_class '{\"pk__in\": [id1, id2, id3, ...]}' ]>"
 
     option_list = BaseCommand.option_list + (
             make_option('--kitchensink', '-k',
@@ -34,26 +35,18 @@ class Command(BaseCommand):
             ids = args[1:]
             assert(ids)
         except IndexError:
-            raise CommandError(error_text %'No object_class or id arguments supplied.')
+            raise CommandError(error_text %'No object_class or filter clause supplied.')
         except ValueError:
             raise CommandError(error_text %("object_class must be provided in"+
                     " the following format: app_name.model_name"))
         except AssertionError:
-            raise CommandError(error_text %'No id arguments supplied.')
+            raise CommandError(error_text %'No filter argument supplied.')
 
         dump_me = loading.get_model(app_label, model_name)
-        try:
-            if ids[0] == '*':
-                objs = dump_me.objects.all()
-            else:
-                objs = dump_me.objects.filter(pk__in=[int(i) for i in ids])
-        except ValueError:
-            # We might have primary keys that are longs...
-            try:
-                objs = dump_me.objects.filter(pk__in=[long(i) for i in ids]) 
-            except ValueError:
-                # Finally, we might have primary keys that are strings...
-                objs = dump_me.objects.filter(pk__in=ids)
+        if ids[0] == '*':
+            objs = dump_me.objects.all()
+        else:
+            objs = dump_me.objects.filter(**json.loads(ids[0]))
 
         if options.get('kitchensink'):
             related_fields = [rel.get_accessor_name() for rel in
