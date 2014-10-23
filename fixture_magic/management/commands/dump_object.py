@@ -22,7 +22,7 @@ class Command(BaseCommand):
             make_option('--natural', '-n',
                 action='store_true', dest='natural',
                 default=False,
-                help='Use natural keys if they are available.')                
+                help='Use natural keys if they are available.')
             )
 
     def handle(self, *args, **options):
@@ -50,7 +50,7 @@ class Command(BaseCommand):
         except ValueError:
             # We might have primary keys that are longs...
             try:
-                objs = dump_me.objects.filter(pk__in=[long(i) for i in ids]) 
+                objs = dump_me.objects.filter(pk__in=[long(i) for i in ids])
             except ValueError:
                 # Finally, we might have primary keys that are strings...
                 objs = dump_me.objects.filter(pk__in=ids)
@@ -71,4 +71,4 @@ class Command(BaseCommand):
         add_to_serialize_list(objs)
         serialize_fully()
         self.stdout.write(serialize('json', [o for o in serialize_me if o is not None],
-                indent=4, use_natural_keys=options.get('natural', False))
+                indent=4, use_natural_keys=options.get('natural', False)))
