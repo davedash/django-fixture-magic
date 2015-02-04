@@ -62,7 +62,10 @@ class Command(BaseCommand):
             for obj in objs:
                 for rel in related_fields:
                     try:
-                        add_to_serialize_list(obj.__getattribute__(rel).all())
+                        if hasattr(getattr(obj, rel), 'all'):
+                            add_to_serialize_list(getattr(obj, rel).all())
+                        else:
+                            add_to_serialize_list([getattr(obj, rel)])
                     except FieldError:
                         pass
                     except ObjectDoesNotExist:
