@@ -20,6 +20,10 @@ class Command(BaseCommand):
                 action='store_true', dest='kitchensink',
                 default=False,
                 help='Attempts to get related objects as well.'),
+            make_option('--natural', '-n',
+                action='store_true', dest='natural',
+                default=False,
+                help='Use natural keys if they are available.')
             )
 
     def handle(self, *args, **options):
@@ -39,10 +43,19 @@ class Command(BaseCommand):
             raise CommandError(error_text %'No filter argument supplied.')
 
         dump_me = loading.get_model(app_label, model_name)
-        if ids[0] == '*':
-            objs = dump_me.objects.all()
-        else:
-            objs = dump_me.objects.filter(**json.loads(ids[0]))
+        try:
+            if ids[0] == '*':
+                objs = dump_me.objects.all()
+            else:
+                objs = dump_me.objects.filter(pk__in=[int(i) for i in ids])
+                # objs = dump_me.objects.filter(**json.loads(ids[0]))
+        except ValueError:
+            # We might have primary keys that are longs...
+            try:
+                objs = dump_me.objects.filter(pk__in=[long(i) for i in ids])
+            except ValueError:
+                # Finally, we might have primary keys that are strings...
+                objs = dump_me.objects.filter(pk__in=ids)
 
         if options.get('kitchensink'):
             related_fields = [rel.get_accessor_name() for rel in
@@ -51,7 +64,10 @@ class Command(BaseCommand):
             for obj in objs:
                 for rel in related_fields:
                     try:
-                        add_to_serialize_list(obj.__getattribute__(rel).all())
+                        if hasattr(getattr(obj, rel), 'all'):
+                            add_to_serialize_list(getattr(obj, rel).all())
+                        else:
+                            add_to_serialize_list([getattr(obj, rel)])
                     except FieldError:
                         pass
                     except ObjectDoesNotExist:
@@ -60,4 +76,4 @@ class Command(BaseCommand):
         add_to_serialize_list(objs)
         serialize_fully()
         self.stdout.write(serialize('json', [o for o in serialize_me if o is not None],
-                indent=4))
+                indent=4, use_natural_keys=options.get('natural', False)))

@@ -68,9 +68,10 @@ def add_to_serialize_list(objs):
         # Proxy models don't serialize well in Django.
         if obj._meta.proxy:
             obj = obj._meta.proxy_for_model.objects.get(pk=obj.pk)
+        model_name = getattr(obj._meta, 'model_name',
+                             getattr(obj._meta, 'module_name', None))
+        key = "%s:%s:%s" % (obj._meta.app_label, model_name, obj.pk)
 
-        key = "%s:%s:%s" % (obj._meta.app_label, obj._meta.module_name,
-                            obj.pk)
         if key not in seen:
             serialize_me.append(obj)
             seen[key] = 1
