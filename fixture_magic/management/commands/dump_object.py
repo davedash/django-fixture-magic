@@ -13,7 +13,7 @@ from fixture_magic.utils import (add_to_serialize_list, serialize_me,
 class Command(BaseCommand):
     help = ('Dump specific objects from the database into JSON that you can '
             'use in a fixture')
-    args = "<[--kitchensink | -k] object_class '{\"pk__in\": [id1, id2, id3, ...]}' ]>"
+    args = "<[--kitchensink | -k] object_class id [id ...]>"
 
     option_list = BaseCommand.option_list + (
             make_option('--kitchensink', '-k',
@@ -23,8 +23,13 @@ class Command(BaseCommand):
             make_option('--natural', '-n',
                 action='store_true', dest='natural',
                 default=False,
-                help='Use natural keys if they are available.')
+                help='Use natural keys if they are available.'),
+            make_option('--query',
+                dest='query', default=None,
+                help=('Use a json query rather than list of ids '
+                      'e.g. \'{\"pk__in\": [id, ...]}\'')),
             )
+
 
     def handle(self, *args, **options):
         error_text = ('%s\nTry calling dump_object with --help argument or ' +
@@ -32,30 +37,34 @@ class Command(BaseCommand):
         try:
             #verify input is valid
             (app_label, model_name) = args[0].split('.')
+            query = options['query']
             ids = args[1:]
-            assert(ids)
+            if ids and query:
+                raise CommandError(error_text % 'either use query or id list, not both')
+            if not (ids or query):
+                raise CommandError(error_text % 'must pass list of ids or a json --query')
         except IndexError:
             raise CommandError(error_text %'No object_class or filter clause supplied.')
         except ValueError:
-            raise CommandError(error_text %("object_class must be provided in"+
+            raise CommandError(error_text %("object_class must be provided in"
                     " the following format: app_name.model_name"))
         except AssertionError:
             raise CommandError(error_text %'No filter argument supplied.')
 
         dump_me = loading.get_model(app_label, model_name)
-        try:
+        if query:
+            objs = dump_me.objects.filter(**json.loads(query))
+        else:
             if ids[0] == '*':
                 objs = dump_me.objects.all()
             else:
-                objs = dump_me.objects.filter(pk__in=[int(i) for i in ids])
-                # objs = dump_me.objects.filter(**json.loads(ids[0]))
-        except ValueError:
-            # We might have primary keys that are longs...
-            try:
-                objs = dump_me.objects.filter(pk__in=[long(i) for i in ids])
-            except ValueError:
-                # Finally, we might have primary keys that are strings...
-                objs = dump_me.objects.filter(pk__in=ids)
+                for parser in int, long, str:
+                    try:
+                        objs = dump_me.objects.filter(pk__in=map(parser, ids))
+                    except ValueError:
+                        pass
+                    else:
+                        break
 
         if options.get('kitchensink'):
             related_fields = [rel.get_accessor_name() for rel in
