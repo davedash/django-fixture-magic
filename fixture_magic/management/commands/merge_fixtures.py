@@ -29,7 +29,7 @@ class Command(BaseCommand):
         seen = {}
 
         for f in files:
-            f = file(f)
+            f = open(f)
             data = json.loads(f.read())
             for object in data:
                 key = '%s|%s' % (object['model'], object['pk'])
