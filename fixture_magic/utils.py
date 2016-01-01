@@ -28,7 +28,7 @@ def reorder_json(data, models, ordering_cond={}):
         else:
             others.append(object)
     for model in models:
-        if ordering_cond.has_key(model):
+        if model in ordering_cond:
             bucket[model].sort(key=ordering_cond[model])
         output.extend(bucket[model])
 
