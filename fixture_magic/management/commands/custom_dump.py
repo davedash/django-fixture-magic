@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys
 try:
     import json
@@ -41,4 +43,4 @@ class Command(BaseCommand):
         data = reorder_json(json.loads(data), dump_settings.get('order', []),
                 ordering_cond=dump_settings.get('order_cond',{}))
 
-        print json.dumps(data, indent=4)
+        print(json.dumps(data, indent=4))

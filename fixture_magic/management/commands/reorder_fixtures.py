@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 try:
     import json
 except ImportError:
@@ -13,6 +15,6 @@ class Command(BaseCommand):
     args = '[fixture model ...]'
 
     def handle(self, fixture, *models, **options):
-        output = reorder_json(json.loads(file(fixture).read()), models)
+        output = reorder_json(json.loads(open(fixture).read()), models)
 
-        print json.dumps(output, indent=4)
+        print(json.dumps(output, indent=4))
