@@ -7,7 +7,10 @@ except ImportError:
     from django.utils import simplejson as json
 
 from django.core.management.base import BaseCommand
-from django.db.models import loading
+try:
+    from django.db.models import loading
+except:
+    from django.apps import apps
 from django.core.serializers import serialize
 from django.conf import settings
 from django.template import Variable, VariableDoesNotExist
@@ -23,7 +26,10 @@ class Command(BaseCommand):
         # Get the primary object
         dump_settings = settings.CUSTOM_DUMPS[dump_name]
         (app_label, model_name) = dump_settings['primary'].split('.')
-        dump_me = loading.get_model(app_label, model_name)
+        try:
+            dump_me = loading.get_model(app_label, model_name)
+        except:
+            dump_me = apps.get_model(app_label, model_name)
         objs = dump_me.objects.filter(pk__in=[int(i) for i in pks])
         for obj in objs:
             # get the dependent objects and add to serialize list
