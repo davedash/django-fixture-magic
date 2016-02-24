@@ -60,6 +60,7 @@ class Command(BaseCommand):
         if query:
             objs = dump_me.objects.filter(**json.loads(query))
         else:
+            objs = []
             if ids[0] == '*':
                 objs = dump_me.objects.all()
             else:
