@@ -7,8 +7,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django.core.serializers import serialize
 try:
     from django.db.models import loading
-except:
-    from django.apps import apps
+except ImportError:
+    from django.apps import apps as loading
 import json
 
 from fixture_magic.utils import (add_to_serialize_list, serialize_me,
@@ -56,10 +56,7 @@ class Command(BaseCommand):
         except AssertionError:
             raise CommandError(error_text %'No filter argument supplied.')
 
-        try:
-            dump_me = loading.get_model(app_label, model_name)
-        except:
-            dump_me = apps.get_model(app_label, model_name)
+        dump_me = loading.get_model(app_label, model_name)
         if query:
             objs = dump_me.objects.filter(**json.loads(query))
         else:
