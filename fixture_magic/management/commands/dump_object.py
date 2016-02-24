@@ -96,3 +96,6 @@ class Command(BaseCommand):
                                     indent=4,
                                     use_natural_foreign_keys=options.get('natural', False),
                                     use_natural_primary_keys=options.get('natural', False)))
+
+        # Clear the list. Useful for when calling multiple dump_object commands with a single execution of django
+        del serialize_me[:]
