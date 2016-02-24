@@ -7,7 +7,10 @@ except ImportError:
     from django.utils import simplejson as json
 
 from django.core.management.base import BaseCommand
-from django.db.models import loading
+try:
+    from django.db.models import loading
+except ImportError:
+    from django.apps import apps as loading
 from django.core.serializers import serialize
 from django.conf import settings
 from django.template import Variable, VariableDoesNotExist

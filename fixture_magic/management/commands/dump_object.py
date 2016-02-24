@@ -5,7 +5,10 @@ from optparse import make_option
 from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
 from django.core.serializers import serialize
-from django.db.models import loading
+try:
+    from django.db.models import loading
+except ImportError:
+    from django.apps import apps as loading
 import json
 
 from fixture_magic.utils import (add_to_serialize_list, serialize_me,
@@ -87,4 +90,9 @@ class Command(BaseCommand):
         add_to_serialize_list(objs)
         serialize_fully()
         self.stdout.write(serialize('json', [o for o in serialize_me if o is not None],
-                indent=4, use_natural_keys=options.get('natural', False)))
+                                    indent=4,
+                                    use_natural_foreign_keys=options.get('natural', False),
+                                    use_natural_primary_keys=options.get('natural', False)))
+
+        # Clear the list. Useful for when calling multiple dump_object commands with a single execution of django
+        del serialize_me[:]
