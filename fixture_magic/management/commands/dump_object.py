@@ -93,4 +93,6 @@ class Command(BaseCommand):
         add_to_serialize_list(objs)
         serialize_fully()
         self.stdout.write(serialize('json', [o for o in serialize_me if o is not None],
-                indent=4, use_natural_keys=options.get('natural', False)))
+                                    indent=4,
+                                    use_natural_foreign_keys=options.get('natural', False),
+                                    use_natural_primary_keys=options.get('natural', False)))
