@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 from optparse import make_option
+from past.builtins import long
 
 from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
