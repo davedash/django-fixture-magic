@@ -23,6 +23,10 @@ The development version can be installed with: ::
 
     pip install -e git://github.com/davedash/django-fixture-magic#egg=fixture-magic
 
+For use in python3 install the following
+
+    pip install future
+
 fixture-magic adds two commands to ``manage.py`` therefore you should add it to
 your ``INSTALLED_APPS`` in ``settings.py``: ::
 
