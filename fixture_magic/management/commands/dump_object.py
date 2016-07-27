@@ -11,8 +11,8 @@ except ImportError:
     from django.apps import apps as loading
 import json
 
-from fixture_magic.utils import (add_to_serialize_list, serialize_me,
-        serialize_fully)
+from fixture_magic.utils import (add_to_serialize_list, serialize_me, seen,
+                                 serialize_fully)
 
 
 class Command(BaseCommand):
@@ -96,3 +96,4 @@ class Command(BaseCommand):
 
         # Clear the list. Useful for when calling multiple dump_object commands with a single execution of django
         del serialize_me[:]
+        seen.clear()
