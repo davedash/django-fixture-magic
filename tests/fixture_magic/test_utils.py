@@ -1,10 +1,13 @@
+from __future__ import absolute_import
+
 import os
 import unittest
-
 os.environ['DJANGO_SETTINGS_MODULE'] = 'tests.test_settings'
+
 from fixture_magic.utils import reorder_json, get_fields
 
 __author__ = 'davedash'
+
 
 
 class UtilsTestCase(unittest.TestCase):
@@ -21,4 +24,3 @@ class UtilsTestCase(unittest.TestCase):
         obj._meta.fields = ['foo']
 
         self.assertEqual(['foo'], get_fields(obj))
-

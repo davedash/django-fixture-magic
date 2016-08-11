@@ -20,7 +20,7 @@ class Command(BaseCommand):
             'use in a fixture')
     args = "<[--kitchensink | -k] object_class id [id ...]>"
 
-    option_list = BaseCommand.option_list + (
+    option_list = getattr(BaseCommand, 'option_list', ()) + (
             make_option('--kitchensink', '-k',
                 action='store_true', dest='kitchensink',
                 default=False,
