@@ -74,7 +74,11 @@ class Command(BaseCommand):
             if ids[0] == '*':
                 objs = dump_me.objects.all()
             else:
-                for parser in int, long, str:
+                try:
+                    parsers = int, long, str
+                except NameError:
+                    parsers = int, str
+                for parser in parsers:
                     try:
                         objs = dump_me.objects.filter(pk__in=map(parser, ids))
                     except ValueError:
