@@ -17,37 +17,48 @@ from fixture_magic.utils import (add_to_serialize_list, serialize_me, seen,
 
 class Command(BaseCommand):
     help = ('Dump specific objects from the database into JSON that you can '
-            'use in a fixture')
-    args = "<[--kitchensink | -k] object_class id [id ...]>"
+            'use in a fixture.')
+    args = "<[--kitchensink | -k] [--natural] [--query] object_class id [id ...]>"
 
-    option_list = getattr(BaseCommand, 'option_list', ()) + (
-            make_option('--kitchensink', '-k',
-                action='store_true', dest='kitchensink',
-                default=False,
-                help='Attempts to get related objects as well.'),
-            make_option('--natural', '-n',
-                action='store_true', dest='natural',
-                default=False,
-                help='Use natural keys if they are available.'),
-            make_option('--query',
-                dest='query', default=None,
-                help=('Use a json query rather than list of ids '
-                      'e.g. \'{\"pk__in\": [id, ...]}\'')),
-            )
 
+    def add_arguments(self, parser):
+        """Add command line arguments to parser"""
+
+        # Required Args
+        parser.add_argument(dest='model',
+                            help=('Name of the model, with app name first. Eg "app_name.model_name"'))
+        parser.add_argument(dest='ids', default=None, nargs='*',
+                            help=('Use a list of ids e.g. 0 1 2 3'))
+
+        # Optional args
+        parser.add_argument('--kitchensink', '-k',
+                            action='store_true', dest='kitchensink',
+                            default=False,
+                            help='Attempts to get related objects as well.')
+        parser.add_argument('--natural', '-n',
+                            action='store_true', dest='natural',
+                            default=False,
+                            help='Use natural keys if they are available.')
+        parser.add_argument('--query',
+                            dest='query', default=None,
+                            help=('Use a json query rather than list of ids '
+                                  'e.g. \'{\"pk__in\": [id, ...]}\''))
 
     def handle(self, *args, **options):
         error_text = ('%s\nTry calling dump_object with --help argument or ' +
-                      'use the following arguments:\n %s' %self.args)
+                      'use the following arguments:\n %s' % self.args)
         try:
             #verify input is valid
-            (app_label, model_name) = args[0].split('.')
+            try:
+                (app_label, model_name) = options['model'].split('.')
+            except AttributeError:
+                raise CommandError("Specify model as `appname.modelname")
             query = options['query']
-            ids = args[1:]
+            ids = options['ids']
             if ids and query:
                 raise CommandError(error_text % 'either use query or id list, not both')
             if not (ids or query):
-                raise CommandError(error_text % 'must pass list of ids or a json --query')
+                raise CommandError(error_text % 'must pass list of --ids or a json --query')
         except IndexError:
             raise CommandError(error_text %'No object_class or filter clause supplied.')
         except ValueError:
@@ -63,7 +74,11 @@ class Command(BaseCommand):
             if ids[0] == '*':
                 objs = dump_me.objects.all()
             else:
-                for parser in int, long, str:
+                try:
+                    parsers = int, long, str
+                except NameError:
+                    parsers = int, str
+                for parser in parsers:
                     try:
                         objs = dump_me.objects.filter(pk__in=map(parser, ids))
                     except ValueError:

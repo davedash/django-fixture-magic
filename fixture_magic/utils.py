@@ -4,7 +4,7 @@ serialize_me = []
 seen = {}
 
 
-def reorder_json(data, models, ordering_cond={}):
+def reorder_json(data, models, ordering_cond=None):
     """Reorders JSON (actually a list of model dicts).
 
     This is useful if you need fixtures for one model to be loaded before
@@ -15,6 +15,8 @@ def reorder_json(data, models, ordering_cond={}):
     :param ordering_cond: a key to sort within a model
     :return: the ordered JSON
     """
+    if ordering_cond is None:
+        ordering_cond = {}
     output = []
     bucket = {}
     others = []
