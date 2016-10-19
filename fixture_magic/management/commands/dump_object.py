@@ -1,8 +1,8 @@
 from __future__ import print_function
 
-from optparse import make_option
 from past.builtins import long
 
+import django
 from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
 from django.core.serializers import serialize
@@ -21,6 +21,26 @@ class Command(BaseCommand):
             'use in a fixture.')
     args = "<[--kitchensink | -k] [--natural] [--query] object_class id [id ...]>"
 
+    def create_parser(self, prog_name, subcommand):
+        """Handle parser creation in regards to the Django version."""
+        parser = super(Command, self).create_parser(prog_name, subcommand)
+
+        old_django_version = django.VERSION[:2] < (1, 10)
+        if old_django_version:
+            # Older Django versions (<1.10) handle optparse backwards
+            # compatibility in regards to accepting positional args,
+            # see:
+            # https://github.com/django/django/blob/stable/1.9.x/
+            #   django/core/management/base.py#L309
+            #
+            # We remove the 'args' action here which would otherwise
+            # consume too many arguments due to its nargs='*' setting.
+            # Django 1.10+ does no longer have that issue.
+            args_action = [action for action in parser._actions
+                           if action.dest == "args"][0]
+            parser._remove_action(args_action)
+
+        return parser
 
     def add_arguments(self, parser):
         """Add command line arguments to parser"""
