@@ -1,8 +1,8 @@
 from __future__ import print_function
 
 from optparse import make_option
-from past.builtins import long
 
+import django
 from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
 from django.core.serializers import serialize
@@ -44,6 +44,11 @@ class Command(BaseCommand):
                             dest='query', default=None,
                             help=('Use a json query rather than list of ids '
                                   'e.g. \'{\"pk__in\": [id, ...]}\''))
+
+        parser.add_argument(
+            '--format', default='json', dest='format',
+            help='Specifies the output serialization format for fixtures.',
+        )
 
     def handle(self, *args, **options):
         error_text = ('%s\nTry calling dump_object with --help argument or ' +
@@ -88,8 +93,14 @@ class Command(BaseCommand):
                         break
 
         if options.get('kitchensink'):
+            if django.VERSION >= (1, 8):
+                fields = (f for f in dump_me._meta.get_fields()
+                          if (f.one_to_many or f.one_to_one) and f.auto_created)
+            else:
+                fields = dump_me._meta.get_all_related_objects()
+
             related_fields = [rel.get_accessor_name() for rel in
-                          dump_me._meta.get_all_related_objects()]
+                          fields]
 
             for obj in objs:
                 for rel in related_fields:
@@ -105,7 +116,7 @@ class Command(BaseCommand):
 
         add_to_serialize_list(objs)
         serialize_fully()
-        self.stdout.write(serialize('json', [o for o in serialize_me if o is not None],
+        self.stdout.write(serialize(options.get('format','json'), [o for o in serialize_me if o is not None],
                                     indent=4,
                                     use_natural_foreign_keys=options.get('natural', False),
                                     use_natural_primary_keys=options.get('natural', False)))
