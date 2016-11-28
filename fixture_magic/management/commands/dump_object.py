@@ -28,7 +28,8 @@ class Command(BaseCommand):
         # Required Args
         parser.add_argument(dest='model',
                             help=('Name of the model, with app name first. Eg "app_name.model_name"'))
-        parser.add_argument(dest='ids', default=None, nargs='*',
+        parser.add_argument('--id',
+                            dest='ids', default=None, nargs='*',
                             help=('Use a list of ids e.g. 0 1 2 3'))
 
         # Optional args
