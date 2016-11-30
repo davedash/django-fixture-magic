@@ -6,13 +6,15 @@ import django
 from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
 from django.core.serializers import serialize
+from django.conf import settings
+
 try:
     from django.db.models import loading
 except ImportError:
     from django.apps import apps as loading
 import json
 
-from fixture_magic.utils import (add_to_serialize_list, serialize_me, seen,
+from fixture_magic.utils import (add_to_serialize_list, serialize_me, seen, reorder_json,
                                  serialize_fully)
 
 
@@ -100,8 +102,7 @@ class Command(BaseCommand):
             else:
                 fields = dump_me._meta.get_all_related_objects()
 
-            related_fields = [rel.get_accessor_name() for rel in
-                          fields]
+            related_fields = [rel.get_accessor_name() for rel in fields]
 
             for obj in objs:
                 for rel in related_fields:
@@ -115,13 +116,17 @@ class Command(BaseCommand):
                     except ObjectDoesNotExist:
                         pass
 
+        dump_settings = settings.CUSTOM_DUMPS["wsdump"]
         add_to_serialize_list(objs)
         serialize_fully()
-        self.stdout.write(serialize(options.get('format','json'), [o for o in serialize_me if o is not None],
-                                    indent=4,
-                                    use_natural_foreign_keys=options.get('natural', False),
-                                    use_natural_primary_keys=options.get('natural', False)))
-
+        data = serialize(
+            options.get('format', 'json'), [o for o in serialize_me if o is not None],
+            indent=4,
+            use_natural_foreign_keys=options.get('natural', False),
+            use_natural_primary_keys=options.get('natural', False))
+        data = reorder_json(json.loads(data), dump_settings.get('order', []),
+                            ordering_cond=dump_settings.get('order_cond', {}))
+        self.stdout.write(json.dumps(data))
         # Clear the list. Useful for when calling multiple dump_object commands with a single execution of django
         del serialize_me[:]
         seen.clear()

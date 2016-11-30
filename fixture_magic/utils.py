@@ -24,11 +24,11 @@ def reorder_json(data, models, ordering_cond=None):
     for model in models:
         bucket[model] = []
 
-    for object in data:
-        if object['model'] in bucket.keys():
-            bucket[object['model']].append(object)
+    for object_d in data:
+        if object_d['model'] in bucket.keys():
+            bucket[object_d['model']].append(object_d)
         else:
-            others.append(object)
+            others.append(object_d)
     for model in models:
         if model in ordering_cond:
             bucket[model].sort(key=ordering_cond[model])
