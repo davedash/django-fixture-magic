@@ -29,10 +29,15 @@ class Command(BaseCommand):
 
         # Required Args
         parser.add_argument(dest='model',
-                            help=('Name of the model, with app name first. Eg "app_name.model_name"'))
+                            help=(
+                                'Name of the model, with app name first. Eg "app_name.model_name"'))
         parser.add_argument('--id',
                             dest='ids', default=None, nargs='*',
                             help=('Use a list of ids e.g. 0 1 2 3'))
+
+        parser.add_argument('--name',
+                            help=('The name of the configuration on settings.'),
+                            dest='config_name', default='wsdump')
 
         # Optional args
         parser.add_argument('--kitchensink', '-k',
@@ -64,6 +69,8 @@ class Command(BaseCommand):
                 raise CommandError("Specify model as `appname.modelname")
             query = options['query']
             ids = options['ids']
+            config_name = options['config_name']
+
             if ids and query:
                 raise CommandError(error_text % 'either use query or id list, not both')
             if not (ids or query):
@@ -116,7 +123,11 @@ class Command(BaseCommand):
                     except ObjectDoesNotExist:
                         pass
 
-        dump_settings = settings.CUSTOM_DUMPS["wsdump"]
+        try:
+            dump_settings = settings.CUSTOM_DUMPS[config_name]
+        except Exception:
+            dump_settings = None
+
         add_to_serialize_list(objs)
         serialize_fully()
         data = serialize(
@@ -124,8 +135,10 @@ class Command(BaseCommand):
             indent=4,
             use_natural_foreign_keys=options.get('natural', False),
             use_natural_primary_keys=options.get('natural', False))
-        data = reorder_json(json.loads(data), dump_settings.get('order', []),
-                            ordering_cond=dump_settings.get('order_cond', {}))
+
+        if dump_settings and dump_settings.get('order', []):
+            data = reorder_json(json.loads(data), dump_settings.get('order', []),
+                                ordering_cond=dump_settings.get('order_cond', {}))
         self.stdout.write(json.dumps(data))
         # Clear the list. Useful for when calling multiple dump_object commands with a single execution of django
         del serialize_me[:]
