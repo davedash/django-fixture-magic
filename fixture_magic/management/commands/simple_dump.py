@@ -24,7 +24,7 @@ class Command(BaseCommand):
     FIELDS_WRONG = [
         "pk", "id", "required_flat_options",
         "default_consumption_option", "attachments",
-        "required_plans", "compatible_plans",
+        "required_plans", "compatible_plans", "default_plan",
         "conflicting_plans", "required_consumption_options", "compatible_consumption_options",
         "conflicting_consumption_options", "compatible_flat_options", "conflicting_flat_options"
     ]
