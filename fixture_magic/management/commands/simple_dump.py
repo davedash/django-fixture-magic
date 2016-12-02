@@ -46,7 +46,8 @@ class Command(BaseCommand):
 
         dump_me = loading.get_model(app_label, model_name)
         fields = (f for f in dump_me._meta.get_fields()
-                  if not f.one_to_many or not f.one_to_one or not f.foreignkey or not f.name == "id")
+                  if not f.one_to_many or not f.one_to_one or not f.foreignkey 
+                  or not f.name == "id" or not f.name == "pk")
 
         all_fields = [rel.name for rel in fields]
         objs = dump_me.objects.all()
