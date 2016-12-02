@@ -10,8 +10,6 @@ try:
 except ImportError:
     from django.apps import apps as loading
 
-import json
-import uuid
 from django.core import serializers
 
 from fixture_magic.utils import (add_to_serialize_list, serialize_me, seen, reorder_json,
@@ -23,16 +21,19 @@ class Command(BaseCommand):
             'use in a fixture.')
     args = "<[--kitchensink | -k] [--natural] [--query] object_class id [id ...]>"
 
+    FIELDS_WRONG = [
+        "pk", "id", "required_flat_options",
+        "default_consumption_option", "attachments",
+        "required_plans", "compatible_plans",
+        "conflicting_plans", "required_consumption_options", "compatible_consumption_options",
+        "conflicting_consumption_options", "compatible_flat_options", "conflicting_flat_options"
+    ]
 
     def add_arguments(self, parser):
         """Add command line arguments to parser"""
 
         # Required Args
         parser.add_argument(dest='model',
-                            help=(
-                                'Name of the model, with app name first. Eg "app_name.model_name"'))
-        parser.add_argument('--file', '-f',
-                            dest='outfile',
                             help=(
                                 'Name of the model, with app name first. Eg "app_name.model_name"'))
 
@@ -42,17 +43,15 @@ class Command(BaseCommand):
         except AttributeError:
             raise CommandError("Specify model as `appname.modelname")
 
-        outfile = options['outfile']
-
         dump_me = loading.get_model(app_label, model_name)
         fields = (f for f in dump_me._meta.get_fields()
-                  if not f.one_to_many or not f.one_to_one or not f.foreignkey 
-                  or not f.name == "id" or not f.name == "pk")
+                  if f.name not in self.FIELDS_WRONG)
 
         all_fields = [rel.name for rel in fields]
         objs = dump_me.objects.all()
-        data = serializers.serialize('json', list(objs), fields=all_fields)
+        to_serialize = []
+        for obj in objs:
+            obj.pk = None
+            to_serialize.append(obj)
+        data = serializers.serialize('json', to_serialize, fields=all_fields)
         print(data)
-
-        del serialize_me[:]
-        seen.clear()
