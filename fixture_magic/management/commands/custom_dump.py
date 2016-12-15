@@ -24,7 +24,7 @@ class Command(BaseCommand):
     help = 'Dump multiple pre-defined sets of objects into a JSON fixture.'
     args = "[dump_name pk [pk2 pk3 [..]]"
 
-    option_list = BaseCommand.option_list + (
+    option_list = getattr(BaseCommand, 'option_list', ()) + (
         make_option('--natural', '-n',
                     action='store_true', dest='natural',
                     default=False,
