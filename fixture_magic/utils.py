@@ -1,4 +1,5 @@
 from django.db import models
+from collections import OrderedDict
 
 serialize_me = []
 seen = {}
@@ -18,21 +19,20 @@ def reorder_json(data, models, ordering_cond=None):
     if ordering_cond is None:
         ordering_cond = {}
     output = []
-    bucket = {}
+    bucket = OrderedDict([])
     others = []
-
     for model in models:
-        bucket[model] = []
+        bucket.update({model: []})
 
-    for object in data:
-        if object['model'] in bucket.keys():
-            bucket[object['model']].append(object)
+    for object_d in data:
+        if object_d['model'] in bucket.keys():
+            bucket[object_d['model']].append(object_d)
         else:
-            others.append(object)
-    for model in models:
-        if model in ordering_cond:
-            bucket[model].sort(key=ordering_cond[model])
-        output.extend(bucket[model])
+            others.append(object_d)
+
+    for bk in bucket:
+        bucket[bk].sort(key=ordering_cond[bk])
+        output.extend(bucket[bk])
 
     output.extend(others)
     return output
