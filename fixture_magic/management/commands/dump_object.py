@@ -19,8 +19,6 @@ from fixture_magic.utils import (add_to_serialize_list, serialize_me, seen,
 class Command(BaseCommand):
     help = ('Dump specific objects from the database into JSON that you can '
             'use in a fixture.')
-    args = "<[--kitchensink | -k] [--natural] [--query] object_class id [id ...]>"
-
 
     def add_arguments(self, parser):
         """Add command line arguments to parser"""
