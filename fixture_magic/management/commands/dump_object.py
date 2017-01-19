@@ -47,7 +47,7 @@ class Command(BaseCommand):
         parser.add_argument('--no-follow',
                             action='store_false', dest='follow_fk',
                             default=True,
-                            help='serializes Foriegn Keys related to object')
+                            help='does not serialize Foriegn Keys related to object')
 
         parser.add_argument(
             '--format', default='json', dest='format',
