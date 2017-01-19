@@ -44,6 +44,10 @@ class Command(BaseCommand):
                             dest='query', default=None,
                             help=('Use a json query rather than list of ids '
                                   'e.g. \'{\"pk__in\": [id, ...]}\''))
+        parser.add_argument('--no-follow',
+                            action='store_false', dest='follow_fk',
+                            default=True,
+                            help='serializes Foriegn Keys related to object')
 
         parser.add_argument(
             '--format', default='json', dest='format',
@@ -115,7 +119,8 @@ class Command(BaseCommand):
                         pass
 
         add_to_serialize_list(objs)
-        serialize_fully()
+        if options.get('follow_fk', True):
+            serialize_fully()
         self.stdout.write(serialize(options.get('format','json'), [o for o in serialize_me if o is not None],
                                     indent=4,
                                     use_natural_foreign_keys=options.get('natural', False),
