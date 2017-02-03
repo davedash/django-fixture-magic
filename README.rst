@@ -97,8 +97,7 @@ Running with the ``--no-follow`` options yields:
     ]
 
 
-Note: The above example assumes that an Author with an ID of 5
-exists in the target database.
+:Note: The above example assumes that an Author with an ID of 5 exists in the target database.
 
 The second command is ``merge_fixtures``.  This command takes several fixture
 files and does a simple de-dupe operation (based on model and pk) and returns a
