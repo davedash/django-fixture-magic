@@ -53,6 +53,45 @@ Or you can get all objects with all dependencies by passing an asterisk:
 You can now safely load ``my_new_fixture.json`` in a test without foreign key i
 errors.
 
+By default, fixture magic will dump related fixtures to your model in your fixture.
+This can be disabled by passing the option ``--no-follow`` to ``dump_object``. This
+is useful if your target database is already partially setup. Here is and example default output of dump_object.
+
+    > ./manage.py dump_object APP.Book
+    [
+      {
+          "model": "APP.Author",
+          "fields": {
+              "pk": 5,
+              "name": "Mark Twain",
+          }
+      },
+      {
+          "model": "APP.Book",
+          "fields": {
+              "pk": 2,
+              "title": "Tom Sawyer",
+              "author": 5
+          }
+      }
+    ]
+
+Running with the ``--no-follow`` options yields:
+
+    > ./manage.py dump_object APP.Book --no-follow
+    [
+      {
+          "model": "APP.Book",
+          "fields": {
+              "pk": 2,
+              "title": "Tom Sawyer",
+              "author": 5
+          }
+      }
+    ]
+
+
+
 The second command is ``merge_fixtures``.  This command takes several fixture
 files and does a simple de-dupe operation (based on model and pk) and returns a
 clean json file.  This is helpful if you have multiple json fixtures that might
