@@ -58,6 +58,9 @@ This can be disabled by passing the option ``--no-follow`` to ``dump_object``. T
 is useful if your target database is already partially setup. Here is and example default output of dump_object.
 
     > ./manage.py dump_object APP.Book
+
+::
+
     [
       {
           "model": "APP.Author",
@@ -79,6 +82,9 @@ is useful if your target database is already partially setup. Here is and exampl
 Running with the ``--no-follow`` options yields:
 
     > ./manage.py dump_object APP.Book --no-follow
+
+::
+
     [
       {
           "model": "APP.Book",
@@ -91,6 +97,8 @@ Running with the ``--no-follow`` options yields:
     ]
 
 
+Note: The above example assumes that an Author with an ID of 5
+exists in the target database.
 
 The second command is ``merge_fixtures``.  This command takes several fixture
 files and does a simple de-dupe operation (based on model and pk) and returns a
