@@ -101,10 +101,16 @@ class Command(BaseCommand):
                 fields = (f for f in dump_me._meta.get_fields()
                           if (f.one_to_many or f.one_to_one) and f.auto_created)
             else:
-                fields = dump_me._meta.get_all_related_objects()
+                try:
+                    fields = dump_me._meta.get_all_related_objects()
+                except AttributeError:
+                    fields = [
+                        f for f in dump_me._meta.get_fields()
+                        if (f.one_to_many or f.one_to_one)
+                        and f.auto_created and not f.concrete
+                    ]
 
-            related_fields = [rel.get_accessor_name() for rel in
-                          fields]
+            related_fields = [rel.get_accessor_name() for rel in fields]
 
             for obj in objs:
                 for rel in related_fields:
