@@ -9,3 +9,4 @@ build/
 .tox
 coverage.xml
 junit-py27.xml
+.DS_Store
