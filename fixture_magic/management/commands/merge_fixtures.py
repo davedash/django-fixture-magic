@@ -7,6 +7,7 @@ except ImportError:
 
 from django.core.management.base import BaseCommand
 
+
 def write_json(output):
     try:
         # check our json import supports sorting keys
@@ -16,8 +17,9 @@ def write_json(output):
     else:
         print(json.dumps(output, sort_keys=True, indent=4))
 
+
 class Command(BaseCommand):
-    help = ('Merge a series of fixtures and remove duplicates.')
+    help = 'Merge a series of fixtures and remove duplicates.'
     args = '[file ...]'
 
     def handle(self, *files, **options):
@@ -31,10 +33,10 @@ class Command(BaseCommand):
         for f in files:
             f = open(f)
             data = json.loads(f.read())
-            for object in data:
-                key = '%s|%s' % (object['model'], object['pk'])
+            for obj in data:
+                key = '%s|%s' % (obj['model'], obj['pk'])
                 if key not in seen:
                     seen[key] = 1
-                    output.append(object)
+                    output.append(obj)
 
         write_json(output)

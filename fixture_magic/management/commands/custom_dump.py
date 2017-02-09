@@ -17,8 +17,13 @@ from django.core.serializers import serialize
 from django.conf import settings
 from django.template import Variable, VariableDoesNotExist
 
-from fixture_magic.utils import (add_to_serialize_list, reorder_json,
-        serialize_me, serialize_fully)
+from fixture_magic.utils import (
+    add_to_serialize_list,
+    reorder_json,
+    serialize_me,
+    serialize_fully
+)
+
 
 class Command(BaseCommand):
     help = 'Dump multiple pre-defined sets of objects into a JSON fixture.'
@@ -57,7 +62,10 @@ class Command(BaseCommand):
                          use_natural_primary_keys=options.get('natural', False),
                          )
 
-        data = reorder_json(json.loads(data), dump_settings.get('order', []),
-                ordering_cond=dump_settings.get('order_cond',{}))
+        data = reorder_json(
+            json.loads(data),
+            dump_settings.get('order', []),
+            ordering_cond=dump_settings.get('order_cond', {})
+        )
 
         print(json.dumps(data, indent=4))

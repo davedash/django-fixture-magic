@@ -4,3 +4,4 @@ install:
     - pip install tox
 script:
     - tox
+    - pep8 fixture_magic --max-line-length=120

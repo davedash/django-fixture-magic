@@ -1,11 +1,11 @@
 from __future__ import print_function
 
-from optparse import make_option
-
-import django
 from django.core.exceptions import FieldError, ObjectDoesNotExist
 from django.core.management.base import BaseCommand, CommandError
 from django.core.serializers import serialize
+
+from fixture_magic.compat import get_all_related_objects
+
 try:
     from django.db.models import loading
 except ImportError:
@@ -21,15 +21,14 @@ class Command(BaseCommand):
             'use in a fixture.')
     args = "<[--kitchensink | -k] [--natural] [--query] object_class id [id ...]>"
 
-
     def add_arguments(self, parser):
         """Add command line arguments to parser"""
 
         # Required Args
         parser.add_argument(dest='model',
-                            help=('Name of the model, with app name first. Eg "app_name.model_name"'))
+                            help='Name of the model, with app name first. Eg "app_name.model_name"')
         parser.add_argument(dest='ids', default=None, nargs='*',
-                            help=('Use a list of ids e.g. 0 1 2 3'))
+                            help='Use a list of ids e.g. 0 1 2 3')
 
         # Optional args
         parser.add_argument('--kitchensink', '-k',
@@ -58,7 +57,7 @@ class Command(BaseCommand):
         error_text = ('%s\nTry calling dump_object with --help argument or ' +
                       'use the following arguments:\n %s' % self.args)
         try:
-            #verify input is valid
+            # verify input is valid
             try:
                 (app_label, model_name) = options['model'].split('.')
             except AttributeError:
@@ -70,12 +69,14 @@ class Command(BaseCommand):
             if not (ids or query):
                 raise CommandError(error_text % 'must pass list of --ids or a json --query')
         except IndexError:
-            raise CommandError(error_text %'No object_class or filter clause supplied.')
+            raise CommandError(error_text % 'No object_class or filter clause supplied.')
         except ValueError:
-            raise CommandError(error_text %("object_class must be provided in"
-                    " the following format: app_name.model_name"))
+            raise CommandError(
+                error_text %
+                "object_class must be provided in the following format: app_name.model_name"
+            )
         except AssertionError:
-            raise CommandError(error_text %'No filter argument supplied.')
+            raise CommandError(error_text % 'No filter argument supplied.')
 
         dump_me = loading.get_model(app_label, model_name)
         if query:
@@ -97,18 +98,7 @@ class Command(BaseCommand):
                         break
 
         if options.get('kitchensink'):
-            if django.VERSION >= (1, 8):
-                fields = (f for f in dump_me._meta.get_fields()
-                          if (f.one_to_many or f.one_to_one) and f.auto_created)
-            else:
-                try:
-                    fields = dump_me._meta.get_all_related_objects()
-                except AttributeError:
-                    fields = [
-                        f for f in dump_me._meta.get_fields()
-                        if (f.one_to_many or f.one_to_one)
-                        and f.auto_created and not f.concrete
-                    ]
+            fields = get_all_related_objects(dump_me)
 
             related_fields = [rel.get_accessor_name() for rel in fields]
 
@@ -132,7 +122,7 @@ class Command(BaseCommand):
             # reverse list to match output of serializez_fully
             serialize_me.reverse()
 
-        self.stdout.write(serialize(options.get('format','json'), [o for o in serialize_me if o is not None],
+        self.stdout.write(serialize(options.get('format', 'json'), [o for o in serialize_me if o is not None],
                                     indent=4,
                                     use_natural_foreign_keys=options.get('natural', False),
                                     use_natural_primary_keys=options.get('natural', False)))
