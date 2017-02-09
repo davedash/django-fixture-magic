@@ -8,5 +8,6 @@ build/
 .coverage
 .tox
 coverage.xml
-junit-py27.xml
+junit-*.xml
 .DS_Store
+.idea
