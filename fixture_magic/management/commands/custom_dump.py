@@ -1,7 +1,6 @@
 from __future__ import print_function
 
 import sys
-from optparse import make_option
 
 try:
     import json
@@ -27,27 +26,29 @@ from fixture_magic.utils import (
 
 class Command(BaseCommand):
     help = 'Dump multiple pre-defined sets of objects into a JSON fixture.'
-    args = "[dump_name pk [pk2 pk3 [..]]"
 
-    option_list = getattr(BaseCommand, 'option_list', ()) + (
-        make_option('--natural', '-n',
-                    action='store_true', dest='natural',
-                    default=False,
-                    help='Use natural keys if they are available.'),
-    )
+    def add_arguments(self, parser):
+        parser.add_argument('dump_name')
+        parser.add_argument('pk', nargs='+')
+        parser.add_argument('--natural', default=False, action='store_true', dest='natural',
+                            help='Use natural keys if they are available.')
 
-    def handle(self, dump_name, *pks, **options):
+    def handle(self, *args, **options):
         # Get the primary object
+        dump_name = options['dump_name']
+        pks = options['pk']
         dump_settings = settings.CUSTOM_DUMPS[dump_name]
         (app_label, model_name) = dump_settings['primary'].split('.')
         include_primary = dump_settings.get("include_primary", False)
         dump_me = loading.get_model(app_label, model_name)
         objs = dump_me.objects.filter(pk__in=[int(i) for i in pks])
-        for obj in objs:
+        for obj in objs.all():
             # get the dependent objects and add to serialize list
             for dep in dump_settings['dependents']:
                 try:
                     thing = Variable("thing.%s" % dep).resolve({'thing': obj})
+                    if hasattr(thing, 'all'):  # Related managers can't be iterated over
+                        thing = thing.all()
                     add_to_serialize_list([thing])
                 except VariableDoesNotExist:
                     sys.stderr.write('%s not found' % dep)
