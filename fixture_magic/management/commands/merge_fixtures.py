@@ -9,13 +9,15 @@ from django.core.management.base import BaseCommand
 
 
 def write_json(output):
+    result = "{}"
     try:
         # check our json import supports sorting keys
         json.dumps([1], sort_keys=True)
     except TypeError:
-        print(json.dumps(output, indent=4))
+        result = json.dumps(output, indent=4)
     else:
-        print(json.dumps(output, sort_keys=True, indent=4))
+        result = json.dumps(output, sort_keys=True, indent=4)
+    return result
 
 
 class Command(BaseCommand):
@@ -39,4 +41,5 @@ class Command(BaseCommand):
                     seen[key] = 1
                     output.append(obj)
 
-        write_json(output)
+        self.stdout.write(write_json(output))
+##--eof--##
