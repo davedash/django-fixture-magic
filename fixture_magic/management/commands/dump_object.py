@@ -38,7 +38,15 @@ class Command(BaseCommand):
         parser.add_argument('--natural', '-n',
                             action='store_true', dest='natural',
                             default=False,
-                            help='Use natural keys if they are available.')
+                            help='Use natural foreign and primary keys if they are available.')
+        parser.add_argument('--natural-primary',
+                            action='store_true', dest='natural_primary',
+                            default=False,
+                            help='Use natural primary keys if they are available.')
+        parser.add_argument('--natural-foreign', 
+                            action='store_true', dest='natural_foreign',
+                            default=False,
+                            help='Use natural foreign keys if they are available.')
         parser.add_argument('--query',
                             dest='query', default=None,
                             help=('Use a json query rather than list of ids '
@@ -121,11 +129,14 @@ class Command(BaseCommand):
         else:
             # reverse list to match output of serializez_fully
             serialize_me.reverse()
+            
+        natural_foreign = options.get('natural', False) or options.get('natural_foreign', False)
+        natural_primary = options.get('natural', False) or options.get('natural_primary', False)
 
         self.stdout.write(serialize(options.get('format', 'json'), [o for o in serialize_me if o is not None],
                                     indent=4,
-                                    use_natural_foreign_keys=options.get('natural', False),
-                                    use_natural_primary_keys=options.get('natural', False)))
+                                    use_natural_foreign_keys=natural_foreign,
+                                    use_natural_primary_keys=natural_primary))
 
         # Clear the list. Useful for when calling multiple dump_object commands with a single execution of django
         del serialize_me[:]
