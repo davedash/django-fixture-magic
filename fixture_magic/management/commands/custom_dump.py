@@ -14,7 +14,6 @@ except ImportError:
     from django.apps import apps as loading
 from django.core.serializers import serialize
 from django.conf import settings
-from django.template import Variable, VariableDoesNotExist
 
 from fixture_magic.utils import (
     add_to_serialize_list,
@@ -22,6 +21,27 @@ from fixture_magic.utils import (
     serialize_me,
     serialize_fully
 )
+
+
+def process_dep(parent, dep):
+    parts = dep.split('.')
+    current = parts.pop(0)
+    remain = '.'.join(parts)
+
+    try:
+        thing = getattr(parent, current)
+    except AttributeError:
+        sys.stderr.write('%s.%s not found\n' % (parent, current))
+    else:
+        if hasattr(thing, 'all'):
+            children = thing.all()
+        else:
+            children = [thing]
+        add_to_serialize_list(children)
+
+        if remain:
+            for child in children:
+                process_dep(child, remain)
 
 
 class Command(BaseCommand):
@@ -42,18 +62,12 @@ class Command(BaseCommand):
         include_primary = dump_settings.get("include_primary", False)
         dump_me = loading.get_model(app_label, model_name)
         objs = dump_me.objects.filter(pk__in=[int(i) for i in pks])
+        deps = dump_settings['dependents']
         for obj in objs.all():
             # get the dependent objects and add to serialize list
-            for dep in dump_settings['dependents']:
-                try:
-                    thing = Variable("thing.%s" % dep).resolve({'thing': obj})
-                    if hasattr(thing, 'all'):  # Related managers can't be iterated over
-                        thing = thing.all()
-                    add_to_serialize_list([thing])
-                except VariableDoesNotExist:
-                    sys.stderr.write('%s not found' % dep)
-
-            if include_primary or not dump_settings['dependents']:
+            for dep in deps:
+                process_dep(obj, dep)
+            if include_primary or not deps:
                 add_to_serialize_list([obj])
 
         serialize_fully()
