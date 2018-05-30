@@ -14,7 +14,6 @@ except ImportError:
     from django.apps import apps as loading
 from django.core.serializers import serialize
 from django.conf import settings
-from django.template import Variable, VariableDoesNotExist
 
 from fixture_magic.utils import (
     add_to_serialize_list,
@@ -24,12 +23,33 @@ from fixture_magic.utils import (
 )
 
 
+def process_dep(parent, dep):
+    parts = dep.split('.')
+    current = parts.pop(0)
+    remain = '.'.join(parts)
+
+    try:
+        thing = getattr(parent, current)
+    except AttributeError:
+        sys.stderr.write('%s.%s not found\n' % (parent, current))
+    else:
+        if hasattr(thing, 'all'):
+            children = thing.all()
+        else:
+            children = [thing]
+        add_to_serialize_list(children)
+
+        if remain:
+            for child in children:
+                process_dep(child, remain)
+
+
 class Command(BaseCommand):
     help = 'Dump multiple pre-defined sets of objects into a JSON fixture.'
 
     def add_arguments(self, parser):
         parser.add_argument('dump_name')
-        parser.add_argument('pk', nargs='+')
+        parser.add_argument('pk', nargs='*')
         parser.add_argument('--natural', default=False, action='store_true', dest='natural',
                             help='Use natural keys if they are available.')
 
@@ -38,22 +58,23 @@ class Command(BaseCommand):
         dump_name = options['dump_name']
         pks = options['pk']
         dump_settings = settings.CUSTOM_DUMPS[dump_name]
-        (app_label, model_name) = dump_settings['primary'].split('.')
+        app_label, model_name, *subset = dump_settings['primary'].split('.')
         include_primary = dump_settings.get("include_primary", False)
-        dump_me = loading.get_model(app_label, model_name)
-        objs = dump_me.objects.filter(pk__in=[int(i) for i in pks])
+        manager = loading.get_model(app_label, model_name).objects
+        if subset:
+            dump_me = getattr(manager, subset[0])()
+        else:
+            dump_me = manager
+        if pks:
+            objs = dump_me.filter(pk__in=pks)
+        else:
+            objs = dump_me
+        deps = dump_settings.get('dependents', [])
         for obj in objs.all():
             # get the dependent objects and add to serialize list
-            for dep in dump_settings['dependents']:
-                try:
-                    thing = Variable("thing.%s" % dep).resolve({'thing': obj})
-                    if hasattr(thing, 'all'):  # Related managers can't be iterated over
-                        thing = thing.all()
-                    add_to_serialize_list([thing])
-                except VariableDoesNotExist:
-                    sys.stderr.write('%s not found' % dep)
-
-            if include_primary or not dump_settings['dependents']:
+            for dep in deps:
+                process_dep(obj, dep)
+            if include_primary or not deps:
                 add_to_serialize_list([obj])
 
         serialize_fully()
@@ -69,4 +90,4 @@ class Command(BaseCommand):
             ordering_cond=dump_settings.get('order_cond', {})
         )
 
-        print(json.dumps(data, indent=4))
+        self.stdout.write(json.dumps(data, indent=4))
