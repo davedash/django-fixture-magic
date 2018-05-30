@@ -83,4 +83,4 @@ class Command(BaseCommand):
             ordering_cond=dump_settings.get('order_cond', {})
         )
 
-        print(json.dumps(data, indent=4))
+        self.stdout.write(json.dumps(data, indent=4))
