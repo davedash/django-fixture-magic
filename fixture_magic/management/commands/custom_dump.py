@@ -69,7 +69,7 @@ class Command(BaseCommand):
             objs = dump_me.filter(pk__in=pks)
         else:
             objs = dump_me
-        deps = dump_settings['dependents']
+        deps = dump_settings.get('dependents', [])
         for obj in objs.all():
             # get the dependent objects and add to serialize list
             for dep in deps:
