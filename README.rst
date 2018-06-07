@@ -1,4 +1,5 @@
-.. image:: https://travis-ci.org/davedash/django-fixture-magic.png
+.. image:: https://travis-ci.org/davedash/django-fixture-magic.png?branch=master
+    :target: https://travis-ci.org/davedash/django-fixture-magic
 
 
 
@@ -8,7 +9,7 @@ Requirements
 
 This package requires:
 
-* Python 2.6
+* Python 2.7
 * Django
 
 
