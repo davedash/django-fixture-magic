@@ -31,7 +31,7 @@ def process_dep(parent, dep):
     try:
         thing = getattr(parent, current)
     except AttributeError:
-        sys.stderr.write('%s.%s not found\n' % (parent, current))
+        pass  # related object not found
     else:
         if hasattr(thing, 'all'):
             children = thing.all()
