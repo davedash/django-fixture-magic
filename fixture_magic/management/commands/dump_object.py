@@ -12,8 +12,7 @@ except ImportError:
     from django.apps import apps as loading
 import json
 
-from fixture_magic.utils import (add_to_serialize_list, serialize_me, seen,
-                                 serialize_fully)
+from fixture_magic.utils import (add_to_serialize_list, serialize_fully)
 
 
 class Command(BaseCommand):
@@ -65,6 +64,8 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        serialize_me = []
+        seen = set()
         error_text = ('%s\nTry calling dump_object with --help argument or ' +
                       'use the following arguments:\n %s' % self.args)
         try:
@@ -117,18 +118,18 @@ class Command(BaseCommand):
                 for rel in related_fields:
                     try:
                         if hasattr(getattr(obj, rel), 'all'):
-                            add_to_serialize_list(getattr(obj, rel).all())
+                            add_to_serialize_list(getattr(obj, rel).all(), serialize_me, seen)
                         else:
-                            add_to_serialize_list([getattr(obj, rel)])
+                            add_to_serialize_list([getattr(obj, rel)], serialize_me, seen)
                     except FieldError:
                         pass
                     except ObjectDoesNotExist:
                         pass
 
-        add_to_serialize_list(objs)
+        add_to_serialize_list(objs, serialize_me, seen)
 
         if options.get('follow_fk', True):
-            serialize_fully()
+            serialize_fully(serialize_me, seen)
         else:
             # reverse list to match output of serializez_fully
             serialize_me.reverse()
@@ -143,8 +144,3 @@ class Command(BaseCommand):
                                     indent=4,
                                     use_natural_foreign_keys=natural_foreign,
                                     use_natural_primary_keys=natural_primary))
-
-        # Clear the list. Useful for when calling multiple
-        # dump_object commands with a single execution of django
-        del serialize_me[:]
-        seen.clear()

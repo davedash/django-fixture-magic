@@ -1,7 +1,5 @@
 from __future__ import print_function
 
-import sys
-
 try:
     import json
 except ImportError:
@@ -18,12 +16,11 @@ from django.conf import settings
 from fixture_magic.utils import (
     add_to_serialize_list,
     reorder_json,
-    serialize_me,
     serialize_fully
 )
 
 
-def process_dep(parent, dep):
+def process_dep(parent, dep, serialize_me, seen):
     parts = dep.split('.')
     current = parts.pop(0)
     remain = '.'.join(parts)
@@ -37,11 +34,11 @@ def process_dep(parent, dep):
             children = thing.all()
         else:
             children = [thing]
-        add_to_serialize_list(children)
+        add_to_serialize_list(children, serialize_me, seen)
 
         if remain:
             for child in children:
-                process_dep(child, remain)
+                process_dep(child, remain, serialize_me, seen)
 
 
 class Command(BaseCommand):
@@ -54,6 +51,8 @@ class Command(BaseCommand):
                             help='Use natural keys if they are available.')
 
     def handle(self, *args, **options):
+        serialize_me = []
+        seen = set()
         # Get the primary object
         dump_name = options['dump_name']
         pks = options['pk']
@@ -66,11 +65,11 @@ class Command(BaseCommand):
         for obj in objs.all():
             # get the dependent objects and add to serialize list
             for dep in deps:
-                process_dep(obj, dep)
+                process_dep(obj, dep, serialize_me, seen)
             if include_primary or not deps:
-                add_to_serialize_list([obj])
+                add_to_serialize_list([obj], serialize_me, seen)
 
-        serialize_fully()
+        serialize_fully(serialize_me, seen)
         data = serialize('json', [o for o in serialize_me if o is not None],
                          indent=4,
                          use_natural_foreign_keys=options.get('natural', False),

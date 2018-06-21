@@ -1,8 +1,5 @@
 from django.db import models
 
-serialize_me = []
-seen = {}
-
 
 def reorder_json(data, models, ordering_cond=None):
     """Reorders JSON (actually a list of model dicts).
@@ -45,21 +42,24 @@ def get_fields(obj):
         return []
 
 
-def serialize_fully():
+def serialize_fully(serialize_me, seen):
     index = 0
 
     while index < len(serialize_me):
         for field in get_fields(serialize_me[index]):
             if isinstance(field, models.ForeignKey):
                 add_to_serialize_list(
-                    [serialize_me[index].__getattribute__(field.name)])
+                    [serialize_me[index].__getattribute__(field.name)],
+                    serialize_me,
+                    seen
+                )
 
         index += 1
 
     serialize_me.reverse()
 
 
-def add_to_serialize_list(objs):
+def add_to_serialize_list(objs, serialize_me, seen):
     for obj in objs:
         if obj is None:
             continue
@@ -76,4 +76,4 @@ def add_to_serialize_list(objs):
 
         if key not in seen:
             serialize_me.append(obj)
-            seen[key] = 1
+            seen.add(key)
