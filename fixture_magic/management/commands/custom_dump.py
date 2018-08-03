@@ -59,17 +59,17 @@ class Command(BaseCommand):
         dump_settings = settings.CUSTOM_DUMPS[dump_name]
         app_label, model_name, *manager_method = dump_settings['primary'].split('.')
         include_primary = dump_settings.get("include_primary", False)
+
         default_manager = loading.get_model(app_label, model_name).objects
         if manager_method:
-            dump_me = getattr(default_manager, manager_method[0])()
+            queryset = getattr(default_manager, manager_method[0])()
         else:
-            dump_me = default_manager
+            queryset = default_manager.all()
         if pks:
-            objs = dump_me.filter(pk__in=pks)
-        else:
-            objs = dump_me
+            queryset = queryset.filter(pk__in=pks)
+
         deps = dump_settings.get('dependents', [])
-        for obj in objs.all():
+        for obj in queryset:
             # get the dependent objects and add to serialize list
             for dep in deps:
                 process_dep(obj, dep, serialize_me, seen)
