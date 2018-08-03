@@ -46,7 +46,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('dump_name')
-        parser.add_argument('pk', nargs='+')
+        parser.add_argument('pk', nargs='*')
         parser.add_argument('--natural', default=False, action='store_true', dest='natural',
                             help='Use natural keys if they are available.')
 
@@ -57,10 +57,17 @@ class Command(BaseCommand):
         dump_name = options['dump_name']
         pks = options['pk']
         dump_settings = settings.CUSTOM_DUMPS[dump_name]
-        (app_label, model_name) = dump_settings['primary'].split('.')
+        app_label, model_name, *manager_method = dump_settings['primary'].split('.')
         include_primary = dump_settings.get("include_primary", False)
-        dump_me = loading.get_model(app_label, model_name)
-        objs = dump_me.objects.filter(pk__in=[int(i) for i in pks])
+        default_manager = loading.get_model(app_label, model_name).objects
+        if manager_method:
+            dump_me = getattr(default_manager, manager_method[0])()
+        else:
+            dump_me = default_manager
+        if pks:
+            objs = dump_me.filter(pk__in=pks)
+        else:
+            objs = dump_me
         deps = dump_settings.get('dependents', [])
         for obj in objs.all():
             # get the dependent objects and add to serialize list
