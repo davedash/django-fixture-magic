@@ -8,27 +8,29 @@ Requirements
 
 This package requires:
 
-    * Python 2.6
-    * Django
+* Python 2.6
+* Django
 
 
 Installation
 ------------
 
-You can get fixture-magic from pypi with: ::
+You can get fixture-magic from pypi with::
 
     pip install django-fixture-magic
 
-The development version can be installed with: ::
+The development version can be installed with::
 
     pip install -e git://github.com/davedash/django-fixture-magic#egg=fixture-magic
 
-For use in python3 install the following
+For use in python3 install the following::
 
     pip install future
 
 fixture-magic adds two commands to ``manage.py`` therefore you should add it to
-your ``INSTALLED_APPS`` in ``settings.py``: ::
+your ``INSTALLED_APPS`` in ``settings.py``:
+
+.. code-block:: python
 
     INSTALLED_APPS = (
         ...
@@ -40,10 +42,13 @@ Usage
 -----
 
 There are four commands.  ``dump_object`` returns the json representation of
-a specific object as well as all its dependencies (as defined by ForeignKeys).
+a specific object as well as all its dependencies (as defined by ForeignKeys)::
 
     ./manage.py dump_object APP.MODEL PK1 PK2 PK3 ... > my_new_fixture.json
-    ## OR
+Or:
+
+::
+
     ./manage.py dump_object APP.MODEL --query '{"pk__in": [PK1, PK2, PK3]}' > my_new_fixture.json
 
 Or you can get all objects with all dependencies by not specifying the pks:
@@ -59,11 +64,11 @@ errors.
 
 By default, fixture magic will dump related fixtures to your model in your fixture.
 This can be disabled by passing the option ``--no-follow`` to ``dump_object``. This
-is useful if your target database is already partially setup. Here is and example default output of dump_object.
+is useful if your target database is already partially setup. Here is and example default output of dump_object::
 
-    > ./manage.py dump_object APP.Book
+    ./manage.py dump_object APP.Book
 
-::
+.. code-block:: json
 
     [
       {
@@ -85,9 +90,9 @@ is useful if your target database is already partially setup. Here is and exampl
 
 Running with the ``--no-follow`` options yields:
 
-    > ./manage.py dump_object APP.Book --no-follow
+    ./manage.py dump_object APP.Book --no-follow
 
-::
+.. code-block:: json
 
     [
       {
@@ -106,7 +111,7 @@ Running with the ``--no-follow`` options yields:
 The second command is ``merge_fixtures``.  This command takes several fixture
 files and does a simple de-dupe operation (based on model and pk) and returns a
 clean json file.  This is helpful if you have multiple json fixtures that might
-have redundant data.
+have redundant data::
 
     ./manage.py merge_fixtures fixture1.json fixture2.json fixture3.json ... \
     > all_my_fixtures.json
@@ -115,7 +120,7 @@ The third command is ``reorder_fixtures``.  This command takes a single file
 and several model names (in ``app.model`` format as they are specified in
 fixture files).  This reorders your fixtures so the models you specifiy first
 show up in the fixture first.  This is helpful if you tend to get foreign-key
-errors when loading models.
+errors when loading models::
 
     ./manage.py reorder_fixtures fixture.json APP1.MODEL1 APP2.MODEL2 ... \
     > ordered_fixture.json
@@ -124,7 +129,7 @@ Unspecified models will be appended to the end.
 
 The fourth command is ``custom_dump``.  This reads a setting ``CUSTOM_DUMPS``:
 
-::
+.. code-block:: python
 
     ## Fixture Magic
     CUSTOM_DUMPS = {
@@ -145,15 +150,15 @@ up the primary object).  The JSON dumps are then merged together.  Very handy
 for dumping multi-dependent objects. `dependents`, `order` and `order_cond` are
 optional.
 
-`dependents`: Defines additional properties/methods to dump the return values
+``dependents``: Defines additional properties/methods to dump the return values
 of. Magic will convert `"current_version.files.all.0"`
 to `object.current_version.files.all()[0]`
 
-`order`: Specify an order in which objects should be dumped based on their
+``order``: Specify an order in which objects should be dumped based on their
 model class. In the above example, all app1.model1 objects will preceed any
 app2.model2 objects, which will preceed any objects of any other model class.
 
-`order_cond`: Specify an order to dump objects of one or more particular model
+``order_cond``: Specify an order to dump objects of one or more particular model
 classes. In the above example, all app1.model1 objects with a truthy
 `self.parent_model1` attribute will come after any other app1.model1 object that
 does not have a truthy value for this attribute. A sort operation is called on
