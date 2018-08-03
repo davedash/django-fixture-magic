@@ -38,13 +38,13 @@ class Command(BaseCommand):
         dump_name = options['dump_name']
         pks = options['pk']
         dump_settings = settings.CUSTOM_DUMPS[dump_name]
-        app_label, model_name, *subset = dump_settings['primary'].split('.')
+        app_label, model_name, *manager_method = dump_settings['primary'].split('.')
         include_primary = dump_settings.get("include_primary", False)
-        manager = loading.get_model(app_label, model_name).objects
-        if subset:
-            dump_me = getattr(manager, subset[0])()
+        default_manager = loading.get_model(app_label, model_name).objects
+        if manager_method:
+            dump_me = getattr(default_manager, manager_method[0])()
         else:
-            dump_me = manager
+            dump_me = default_manager
         if pks:
             objs = dump_me.filter(pk__in=pks)
         else:
