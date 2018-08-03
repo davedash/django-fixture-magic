@@ -46,9 +46,13 @@ a specific object as well as all its dependencies (as defined by ForeignKeys).
     ## OR
     ./manage.py dump_object APP.MODEL --query '{"pk__in": [PK1, PK2, PK3]}' > my_new_fixture.json
 
-Or you can get all objects with all dependencies by passing an asterisk:
+Or you can get all objects with all dependencies by not specifying the pks:
 
-    ./manage.py dump_object APP.MODEL '*' > my_new_fixture.json
+    ./manage.py dump_object APP.MODEL > my_new_fixture.json
+
+You can also dump objects via a manager method:
+
+    ./manage.py dump_object APP.MODEL.METHOD > my_new_fixture.json
 
 You can now safely load ``my_new_fixture.json`` in a test without foreign key i
 errors.
