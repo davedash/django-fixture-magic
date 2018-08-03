@@ -23,7 +23,7 @@ from fixture_magic.utils import (
 def process_dep(parent, dep, serialize_me, seen):
     parts = dep.split('.')
     current = parts.pop(0)
-    remain = '.'.join(parts)
+    leftover = '.'.join(parts)
 
     try:
         thing = getattr(parent, current)
@@ -36,9 +36,9 @@ def process_dep(parent, dep, serialize_me, seen):
             children = [thing]
         add_to_serialize_list(children, serialize_me, seen)
 
-        if remain:
+        if leftover:
             for child in children:
-                process_dep(child, remain, serialize_me, seen)
+                process_dep(child, leftover, serialize_me, seen)
 
 
 class Command(BaseCommand):
