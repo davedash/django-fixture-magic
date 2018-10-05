@@ -9,8 +9,8 @@ Requirements
 
 This package requires:
 
-* Python 2.7
-* Django
+* Python 2.7, 3.6
+* Django 1.8 - 2.1
 
 
 Installation
