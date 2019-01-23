@@ -59,6 +59,7 @@ def serialize_fully():
                 add_to_serialize_list(
                     [serialize_me[index].__getattribute__(field.name)])
         for field in get_m2m(serialize_me[index]):
+            print "in m2m serialize"
             add_to_serialize_list(
                 serialize_me[index].__getattribute__(field.name).all())
         index += 1
