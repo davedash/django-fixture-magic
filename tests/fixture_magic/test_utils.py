@@ -4,7 +4,7 @@ import os
 import unittest
 os.environ['DJANGO_SETTINGS_MODULE'] = 'tests.test_settings'
 
-from fixture_magic.utils import reorder_json, get_fields
+from fixture_magic.utils import reorder_json, get_fields, get_m2m
 
 __author__ = 'davedash'
 
@@ -24,3 +24,10 @@ class UtilsTestCase(unittest.TestCase):
         obj._meta.fields = ['foo']
 
         self.assertEqual(['foo'], get_fields(obj))
+
+    def test_get_m2m(self):
+        obj = lambda: None
+        obj._meta = lambda: None
+        obj._meta.many_to_many = ['bar']
+
+        self.assertEqual(['bar'], get_m2m(obj))
