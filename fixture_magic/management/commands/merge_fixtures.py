@@ -20,7 +20,9 @@ def write_json(output):
 
 class Command(BaseCommand):
     help = 'Merge a series of fixtures and remove duplicates.'
-    args = '[file ...]'
+
+    def add_arguments(self, parser):
+        parser.add_argument('args', metavar='files', nargs='+', help='One or more fixture.')
 
     def handle(self, *files, **options):
         """
