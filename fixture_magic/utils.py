@@ -44,11 +44,13 @@ def get_fields(obj):
     except AttributeError:
         return []
 
+
 def get_m2m(obj):
     try:
         return obj._meta.many_to_many
     except AttributeError:
         return []
+
 
 def serialize_fully():
     index = 0
