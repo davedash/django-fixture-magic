@@ -107,6 +107,8 @@ class Command(BaseCommand):
                         pass
                     else:
                         break
+                else:
+                    objs = []
 
         if options.get('kitchensink'):
             fields = get_all_related_objects(dump_me)
