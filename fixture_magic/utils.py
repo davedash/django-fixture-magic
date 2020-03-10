@@ -38,29 +38,30 @@ def reorder_json(data, models, ordering_cond=None):
     return output
 
 
-def get_fields(obj):
+def get_fields(obj, *exclude_fields):
     try:
-        return obj._meta.fields
+        return [f for f in obj._meta.fields if f.name not in exclude_fields]
     except AttributeError:
         return []
 
 
-def get_m2m(obj):
+def get_m2m(obj, *exclude_fields):
     try:
-        return obj._meta.many_to_many
+        return [f for f in obj._meta.many_to_many if f.name not in exclude_fields]
     except AttributeError:
         return []
 
 
-def serialize_fully():
+def serialize_fully(exclude_fields):
     index = 0
+    exclude_fields = exclude_fields or ()
 
     while index < len(serialize_me):
-        for field in get_fields(serialize_me[index]):
+        for field in get_fields(serialize_me[index], *exclude_fields):
             if isinstance(field, models.ForeignKey):
                 add_to_serialize_list(
                     [serialize_me[index].__getattribute__(field.name)])
-        for field in get_m2m(serialize_me[index]):
+        for field in get_m2m(serialize_me[index], *exclude_fields):
             add_to_serialize_list(
                 serialize_me[index].__getattribute__(field.name).all())
 
@@ -77,11 +78,9 @@ def add_to_serialize_list(objs):
             add_to_serialize_list(obj)
             continue
 
-        # Proxy models don't serialize well in Django.
-        if obj._meta.proxy:
-            obj = obj._meta.proxy_for_model.objects.get(pk=obj.pk)
-        model_name = getattr(obj._meta, 'model_name',
-                             getattr(obj._meta, 'module_name', None))
+        meta = obj._meta.proxy_for_model._meta if obj._meta.proxy else obj._meta
+        model_name = getattr(meta, 'model_name',
+                             getattr(meta, 'module_name', None))
         key = "%s:%s:%s" % (obj._meta.app_label, model_name, obj.pk)
 
         if key not in seen:
