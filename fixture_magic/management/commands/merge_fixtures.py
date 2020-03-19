@@ -1,21 +1,13 @@
-from __future__ import print_function
+from __future__ import (
+    print_function,
+    unicode_literals,
+)
 
-try:
-    import json
-except ImportError:
-    from django.utils import simplejson as json
+from six import string_types
+
+import json
 
 from django.core.management.base import BaseCommand
-
-
-def write_json(output):
-    try:
-        # check our json import supports sorting keys
-        json.dumps([1], sort_keys=True)
-    except TypeError:
-        print(json.dumps(output, indent=4))
-    else:
-        print(json.dumps(output, sort_keys=True, indent=4))
 
 
 class Command(BaseCommand):
@@ -29,16 +21,26 @@ class Command(BaseCommand):
         Load a bunch of json files.  Store the pk/model in a seen dictionary.
         Add all the unseen objects into output.
         """
+        seen = set()
         output = []
-        seen = {}
 
-        for f in files:
-            f = open(f)
-            data = json.loads(f.read())
+        for file_ in files:
+            with open(file_, 'r') as fp:
+                data = json.load(fp)
             for obj in data:
-                key = '%s|%s' % (obj['model'], obj['pk'])
+                model_name = obj['model']
+                if 'pk' in obj.keys():
+                    key_unique = obj['pk']
+                else:
+                    key_unique = '|'.join([
+                        value
+                        for value in obj['fields'].values()
+                        if isinstance(value, string_types)
+                    ])
+                key = '{}|{}'.format(model_name, key_unique)
+
                 if key not in seen:
-                    seen[key] = 1
+                    seen.add(key)
                     output.append(obj)
 
-        write_json(output)
+        print(json.dumps(output, sort_keys=True, indent=4))
