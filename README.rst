@@ -1,4 +1,4 @@
-.. image:: https://travis-ci.org/davedash/django-fixture-magic.png?branch=master
+.. image:: https://travis-ci.org/davedash/django-fixture-magic.svg?branch=master
     :target: https://travis-ci.org/davedash/django-fixture-magic
 
 
