@@ -1,5 +1,10 @@
 from django.db import models
 
+from fixture_magic.handlers import (
+    prepare_handlers,
+    BaseModelHandler
+)
+
 serialize_me = []
 seen = {}
 
@@ -54,15 +59,14 @@ def get_m2m(obj):
 
 def serialize_fully():
     index = 0
-
+    handlers = prepare_handlers()
+    default_handler = BaseModelHandler()
     while index < len(serialize_me):
-        for field in get_fields(serialize_me[index]):
-            if isinstance(field, models.ForeignKey):
-                add_to_serialize_list(
-                    [serialize_me[index].__getattribute__(field.name)])
-        for field in get_m2m(serialize_me[index]):
-            add_to_serialize_list(
-                serialize_me[index].__getattribute__(field.name).all())
+        handler = handlers.get(
+            serialize_me[index]._meta.label,
+            default_handler
+        )
+        handler.handle(serialize_me[index])
 
         index += 1
 
