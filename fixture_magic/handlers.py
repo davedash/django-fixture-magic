@@ -11,8 +11,9 @@ def prepare_handlers():
         FIXTURE_MAGIC_HANDLERS_SETTING_STRING,
         {},
     )
-    for key in handlers:
-        handlers[key] = import_string(handlers[key])()
+    for key, handler in handlers.items():
+        if isinstance(handler, str):
+            handlers[key] = import_string(handler)()
     return handlers
 
 
