@@ -1,0 +1,6 @@
+[run]
+source = fixture_magic
+
+[report]
+omit =
+    tests
