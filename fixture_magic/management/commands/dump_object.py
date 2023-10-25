@@ -37,7 +37,10 @@ class Command(BaseCommand):
                             action='store_true', dest='kitchensink',
                             default=False,
                             help='Attempts to get related objects as well.')
-        parser.add_argument('--exclude-fields', '-e', default=[], nargs='*', help='List of excluded fields (works for all models)')
+        parser.add_argument('--exclude-fields', '-e',
+                            default=[],
+                            nargs='*',
+                            help='List of excluded fields (works for all models)')
         parser.add_argument('--natural', '-n',
                             action='store_true', dest='natural',
                             default=False,
