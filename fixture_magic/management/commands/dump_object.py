@@ -60,6 +60,9 @@ class Command(BaseCommand):
                             action='store_false', dest='follow_fk',
                             default=True,
                             help='does not serialize Foriegn Keys related to object')
+        parser.add_argument('-o', '--output',
+                            default=False,
+                            help='Specifies file to which the output is written.')
 
         parser.add_argument(
             '--format', default='json', dest='format',
@@ -67,6 +70,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        output = options['output']
         error_text = ('%s\nTry calling dump_object with --help argument or ' +
                       'use the following arguments:\n %s' % self.args)
         try:
@@ -142,11 +146,23 @@ class Command(BaseCommand):
         natural_primary = (options.get('natural', False) or
                            options.get('natural_primary', False))
 
-        self.stdout.write(serialize(options.get('format', 'json'),
-                                    [o for o in serialize_me if o is not None],
-                                    indent=4,
-                                    use_natural_foreign_keys=natural_foreign,
-                                    use_natural_primary_keys=natural_primary))
+        stream = open(output, 'w') if output else None
+        args = (options.get('format', 'json'), [o for o in serialize_me if o is not None])
+        kwargs = {
+            'indent': 4,
+            'use_natural_foreign_keys': natural_foreign,
+            'use_natural_primary_keys': natural_primary,
+            'stream': stream
+        }
+
+        try:
+            if stream:
+                serialize(*args, **kwargs)
+            else:
+                self.stdout.write(serialize(*args, **kwargs))
+        finally:
+            if stream:
+                stream.close()
 
         # Clear the list. Useful for when calling multiple
         # dump_object commands with a single execution of django
