@@ -39,8 +39,20 @@ class Command(BaseCommand):
         (app_label, model_name) = dump_settings['primary'].split('.')
         include_primary = dump_settings.get("include_primary", False)
         dump_me = loading.get_model(app_label, model_name)
-        objs = dump_me.objects.filter(pk__in=[int(i) for i in pks])
-        for obj in objs.all():
+        try:
+            parsers = int, long, str
+        except NameError:
+            parsers = int, str
+        for parser in parsers:
+            try:
+                objs = dump_me.objects.filter(pk__in=map(parser, pks)).all()
+            except ValueError:
+                pass
+            else:
+                break
+        else:
+            objs = []
+        for obj in objs:
             # get the dependent objects and add to serialize list
             for dep in dump_settings['dependents']:
                 try:
