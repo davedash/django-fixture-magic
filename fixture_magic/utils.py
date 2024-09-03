@@ -52,18 +52,20 @@ def get_m2m(obj, *exclude_fields):
         return []
 
 
-def serialize_fully(exclude_fields):
+def serialize_fully(exclude_fields, exclude_models):
     index = 0
     exclude_fields = exclude_fields or ()
+    exclude_models = exclude_models or ()
 
     while index < len(serialize_me):
         for field in get_fields(serialize_me[index], *exclude_fields):
-            if isinstance(field, models.ForeignKey):
+            if isinstance(field, models.ForeignKey) and field.related_model not in exclude_models:
                 add_to_serialize_list(
                     [serialize_me[index].__getattribute__(field.name)])
         for field in get_m2m(serialize_me[index], *exclude_fields):
-            add_to_serialize_list(
-                serialize_me[index].__getattribute__(field.name).all())
+            if field.related_model not in exclude_models:
+                add_to_serialize_list(
+                    serialize_me[index].__getattribute__(field.name).all())
 
         index += 1
 

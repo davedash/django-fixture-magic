@@ -39,6 +39,10 @@ class Command(BaseCommand):
                             default=[],
                             nargs='*',
                             help='List of excluded fields (works for all models)')
+        parser.add_argument('--exclude-models', '-m',
+                            default=[],
+                            nargs='*',
+                            help='List of excluded models. Eg: app_name.model_name1 app_name.model_name2')
         parser.add_argument('--natural', '-n',
                             action='store_true', dest='natural',
                             default=False,
@@ -91,6 +95,15 @@ class Command(BaseCommand):
         except AssertionError:
             raise CommandError(error_text % 'No filter argument supplied.')
 
+        exclude_models = []
+        for exclude_model in options['exclude_models']:
+            try:
+                (exclude_app_label, exclude_model_name) = exclude_model.split('.')
+            except AttributeError:
+                raise CommandError("Specify exclude-model as `appname.modelname`")
+
+            exclude_models.append(loading.get_model(exclude_app_label, exclude_model_name))
+
         dump_me = loading.get_model(app_label, model_name)
         if query:
             objs = dump_me.objects.filter(**json.loads(query))
@@ -113,7 +126,7 @@ class Command(BaseCommand):
                     objs = []
 
         if options.get('kitchensink'):
-            fields = get_all_related_objects(dump_me, options['exclude_fields'])
+            fields = get_all_related_objects(dump_me, options['exclude_fields'], exclude_models)
 
             related_fields = [rel.get_accessor_name() for rel in fields]
 
@@ -132,7 +145,7 @@ class Command(BaseCommand):
         add_to_serialize_list(objs)
 
         if options.get('follow_fk', True):
-            serialize_fully(options['exclude_fields'])
+            serialize_fully(options['exclude_fields'], exclude_models)
         else:
             # reverse list to match output of serializez_fully
             serialize_me.reverse()
